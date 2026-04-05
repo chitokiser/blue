@@ -1,28 +1,57 @@
 // /assets/js/pages/town_home.hero.js
-// 비디오 히어로 – IntersectionObserver로 뷰포트에 들어왔을 때만 재생 (성능 최적화)
+// 이미지 슬라이드쇼 히어로 — crossfade, 4초 간격, IntersectionObserver 일시정지
 
 (function () {
   const section = document.getElementById('heroSection');
-  const video   = section && section.querySelector('.hero-video-el');
+  if (!section) return;
 
-  if (!video) return;
+  const slides = Array.from(section.querySelectorAll('.hero-slide'));
+  if (slides.length === 0) return;
 
-  // prefersReducedMotion 설정 시 비디오 정지
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced) {
-    video.pause();
-    return;
+  // 인디케이터 도트 생성
+  const dotsWrap = document.createElement('div');
+  dotsWrap.className = 'hero-dots';
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'hero-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', `슬라이드 ${i + 1}`);
+    dot.addEventListener('click', () => goTo(i));
+    dotsWrap.appendChild(dot);
+  });
+  section.appendChild(dotsWrap);
+
+  const dots = Array.from(dotsWrap.querySelectorAll('.hero-dot'));
+  let current = 0;
+  let timer = null;
+
+  function goTo(idx) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = (idx + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
   }
 
-  // 뷰포트 진입 시 재생, 벗어나면 정지 → 백그라운드 탭 CPU 절약
+  function next() { goTo(current + 1); }
+
+  function start() {
+    if (timer) return;
+    timer = setInterval(next, 4000);
+  }
+
+  function stop() {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  // prefers-reduced-motion 시 첫 장만 표시
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  // 뷰포트 진입 시 재생, 벗어나면 정지
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          video.play().catch(() => { /* autoplay 정책으로 차단될 경우 조용히 처리 */ });
-        } else {
-          video.pause();
-        }
+        if (entry.isIntersecting) { start(); } else { stop(); }
       });
     },
     { threshold: 0.1 }

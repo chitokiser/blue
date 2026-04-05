@@ -225,9 +225,9 @@ async function approveDeposit(adminUid, refCode, overrideKrwRate = null, masterS
       const hexContract = getHexContract(adminWallet);
 
       // allowance 부족 시 MaxUint256 approve (관리자 지갑 → jumpPlatform)
-      const allowance = await hexContract.allowance(adminWallet.address, ADDRESSES.jumpPlatform);
+      const allowance = await hexContract.allowance(adminWallet.address, ADDRESSES.butPlatform);
       if (allowance < hexAmountWei) {
-        const approveTx = await hexContract.approve(ADDRESSES.jumpPlatform, ethers.MaxUint256);
+        const approveTx = await hexContract.approve(ADDRESSES.butPlatform, ethers.MaxUint256);
         await approveTx.wait();
       }
 
@@ -322,13 +322,28 @@ async function approveDeposit(adminUid, refCode, overrideKrwRate = null, masterS
 async function listPendingDeposits(adminUid) {
   await requireAdmin(adminUid);
 
-  const snap = await db.collection('deposits')
-    .where('status', 'in', ['pending', 'processing'])
-    .orderBy('requestedAt', 'desc')
-    .limit(100)
-    .get();
+  // 인덱스 문제 해결: orderBy 제거하고 클라이언트 사이드에서 정렬
+  const [pendingSnap, processingSnap] = await Promise.all([
+    db.collection('deposits')
+      .where('status', '==', 'pending')
+      .limit(100)
+      .get(),
+    db.collection('deposits')
+      .where('status', '==', 'processing')
+      .limit(100)
+      .get(),
+  ]);
 
-  return snap.docs.map((d) => {
+  const allDocs = [...pendingSnap.docs, ...processingSnap.docs];
+
+  // 클라이언트 사이드에서 requestedAt 기준 최신순 정렬
+  allDocs.sort((a, b) => {
+    const aTime = a.data().requestedAt?.toDate?.()?.getTime?.() ?? 0;
+    const bTime = b.data().requestedAt?.toDate?.()?.getTime?.() ?? 0;
+    return bTime - aTime;
+  });
+
+  return allDocs.slice(0, 100).map((d) => {
     const data = d.data();
     return {
       refCode:       data.refCode,

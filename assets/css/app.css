@@ -1,17 +1,17 @@
 ﻿/* /assets/css/app.css */
 
 :root {
-  --bg:    #f5f9ff;
+  --bg:    #f0fdf4;
   --card:  #ffffff;
-  --card2: #eef5ff;
+  --card2: #f0fdf4;
 
   --text:  #1a2744;
   --muted: rgba(26,39,68,.58);
   --line:  rgba(26,39,68,.09);
   --line2: rgba(26,39,68,.05);
 
-  --accent:  #2563eb;
-  --accent2: #7c3aed;
+  --accent:  #0ea5e9;
+  --accent2: #10b981;
 
   --ok:     #16a34a;
   --warn:   #d97706;

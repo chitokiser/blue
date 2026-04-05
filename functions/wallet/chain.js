@@ -1,5 +1,5 @@
 // functions/wallet/chain.js
-// ethers.js v6 – opBNB RPC 연결 + jumpPlatform / HEX 컨트랙트 핼퍼
+// ethers.js v6 – opBNB RPC 연결 + butPlatform / BUT 컨트랙트 헬퍼
 
 'use strict';
 
@@ -11,24 +11,24 @@ const { ethers } = require('ethers');
 const RPC_URL = process.env.OPBNB_RPC || 'https://opbnb-mainnet-rpc.bnbchain.org';
 
 const ADDRESSES = {
-  jumpToken:    '0x41F2Ea9F4eF7c4E35ba1a8438fC80937eD4E5464',  // HEX (플랫폼 포인트 토큰, 18 decimals)
-  jumpJump:     '0xA3C35c52446C133b7211A743c6D47470D1385601',  // JUMP 거래 토큰 (0 decimals)
-  jumpBank:     '0x16752f8948ff2caA02e756c7C8fF0E04887A3a0E',  // 거래소 컨트랙트
-  jumpTreasury: '0xe1f4cDc794D22C23fa47E768dD86Ad09aeEb0312',  // 거버넌스
-  jumpPlatform: '0xc609562D5dB60A83C441BeD0E29d81fbF2497DE0',
+  butToken:    '0xc159663b769E6c421854E913460b973899B76E42',  // BUT 토큰 (0 decimals)
+  butBank:     '0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33',  // butBank (세금 수신)
+  butTreasury: '0x47fac604B1E699E7fbE470598EF69024e8a43b7f',  // Treasury
+  butPlatform: '0x93ded35508F56BA53C5653Eca736aDdfD994AFcd',  // 메인 플랫폼 컨트랙트
+  jumpPlatform: '0x93ded35508F56BA53C5653Eca736aDdfD994AFcd',  // 레거시 alias
 };
 
 // ────────────────────────────────────────────────
-// ABI (minimal – 우리가 호출하는 함수만)
+// ABI — butPlatform (butPlatfrom.sol 기준)
 // ────────────────────────────────────────────────
 const PLATFORM_ABI = [
   // 가입
   'function register(address mentorAddr) external',
 
-  // 관리자: KRW 입금 후 HEX 지급 (transfer to user)
+  // 관리자: KRW 오프체인 결제 후 HEX 지급
   'function adminCreditHex(address user, uint256 hexWei, bytes32 ref) external',
 
-  // 조회: 멤버 정보 (public mapping auto-getter)
+  // 조회: 멤버 정보
   'function members(address) external view returns (uint32 level, address mentor, uint256 exp, uint256 points, bool blocked)',
 
   // 조회: HEX 잔액 + 온체인 FX 환산 (display-only)
@@ -39,13 +39,25 @@ const PLATFORM_ABI = [
 
   // 조회: 공개 파라미터
   'function pointBaseDiv() external view returns (uint32)',
+  'function mentorShareBps() external view returns (uint16)',
+  'function jackpotShareBps() external view returns (uint16)',
+  'function uplineReserveBps() external view returns (uint16)',
+  'function taxThresholdWei() external view returns (uint256)',
+  'function taxAccWei() external view returns (uint256)',
+  'function jackpotAccWei() external view returns (uint256)',
+  'function uplineReserveWei() external view returns (uint256)',
   'function fxKrwPerHexScaled() external view returns (uint256)',
   'function fxUsdPerHexScaled() external view returns (uint256)',
   'function fxVndPerHexScaled() external view returns (uint256)',
   'function fxScale() external view returns (uint32)',
-  'function taxAccWei() external view returns (uint256)',
-  'function mentorShareBps() external view returns (uint16)',
-  'function taxThresholdWei() external view returns (uint256)',
+  'function owner() external view returns (address)',
+  'function pendingOwner() external view returns (address)',
+  'function butBank() external view returns (address)',
+  'function bootstrapMentor() external view returns (address)',
+  'function nextMerchantId() external view returns (uint256)',
+
+  // 조회: 준비금 현황
+  'function solvencyReserve() external view returns (uint256 tax, uint256 jackpot, uint256 uplineReserve, uint256 reserved, uint256 contractBal, bool solvent)',
 
   // 유저 액션
   'function convertPointsToHex(uint256 pointsWei) external',
@@ -53,80 +65,64 @@ const PLATFORM_ABI = [
   'function requestLevelUp() external',
   'function payMerchantHex(uint256 merchantId, uint256 amountWei) external',
   'function registerMerchant(string calldata metadataURI) external returns (uint256 merchantId)',
+  'function updateMerchantByOwner(uint256 merchantId, string calldata metadataURI, bool active) external',
+
+  // 가맹점 조회
+  'function merchants(uint256) external view returns (address ownerAddr, uint16 feeBps, bool active, string metadataURI, bool exists)',
 
   // 관리자 액션
   'function ownerDepositHex(uint256 amountWei) external',
   'function ownerWithdrawHex(address to, uint256 amountWei) external',
   'function manualFlushTax(uint256 maxAmountWei) external',
   'function setFx(uint256 krwPerHexScaled, uint256 usdPerHexScaled, uint256 vndPerHexScaled, uint32 scale) external',
+  'function setParams(uint32 div_, uint16 mentorShareBps_, uint16 jackpotShareBps_, uint16 uplineReserveBps_, uint256 taxThresholdWei_) external',
+  'function setbutBank(address jb, bool callHook) external',
   'function adminUpdateMerchantFee(uint256 merchantId, uint16 feeBps) external',
-  'function setParams(uint32 div_, uint16 mentorShareBps_, uint256 taxThresholdWei_) external',
+  'function adminUpdateMerchantOwner(uint256 merchantId, address newOwner) external',
   'function adminSetLevel(address user, uint32 level_) external',
   'function adminSetBlocked(address user, bool blocked_) external',
   'function adminChangeMentor(address user, address newMentor) external',
-
-  // 가맹점 조회 (public mapping auto-getter)
-  'function merchants(uint256) external view returns (address ownerAddr, uint16 feeBps, bool active, string metadataURI, bool exists)',
+  'function transferOwnership(address newOwner) external',
+  'function acceptOwnership() external',
 
   // 이벤트
   'event Registered(address indexed user, address indexed mentor)',
   'event AdminCreditHex(address indexed user, uint256 hexWei, bytes32 indexed ref)',
   'event MerchantRegistered(uint256 indexed merchantId, address indexed ownerAddr)',
+  'event MerchantMetaUpdated(uint256 indexed merchantId, string metadataURI, bool active)',
+  'event MerchantFeeUpdated(uint256 indexed merchantId, uint16 feeBps)',
   'event PaidHex(address indexed buyer, uint256 indexed merchantId, uint256 amountWei, uint256 feeWei, uint256 expGain)',
+  'event JackpotPointsAwarded(address indexed user, uint256 pointsWei, uint256 rand)',
   'event PointsConverted(address indexed user, uint256 pointsWei, uint256 hexWei)',
   'event TaxFlush(address indexed to, uint256 amountWei, bool ok)',
   'event FxUpdated(uint256 krwPerHexScaled, uint256 usdPerHexScaled, uint256 vndPerHexScaled, uint32 fxScale)',
+  'event OwnershipTransferStarted(address indexed from, address indexed to)',
+  'event OwnershipTransferred(address indexed from, address indexed to)',
 ];
 
-const HEX_ABI = [
-  'function approve(address spender, uint256 amount) external returns (bool)',
-  'function allowance(address owner, address spender) external view returns (uint256)',
-  'function balanceOf(address account) external view returns (uint256)',
-  'function transfer(address to, uint256 amount) external returns (bool)',
-  'event Transfer(address indexed from, address indexed to, uint256 value)',
-];
-
-// JUMP 토큰 ABI (ERC20, 0 decimals)
-const JUMP_TOKEN_ABI = [
+// BUT 토큰 ABI (ERC20, 0 decimals)
+const BUT_TOKEN_ABI = [
   'function approve(address spender, uint256 amount) external returns (bool)',
   'function allowance(address owner, address spender) external view returns (uint256)',
   'function balanceOf(address account) external view returns (uint256)',
   'function transfer(address to, uint256 amount) external returns (bool)',
   'function totalSupply() external view returns (uint256)',
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
+  'event Approval(address indexed owner, address indexed spender, uint256 value)',
 ];
 
-// jumpBank ABI (거래소 + 스테이킹 + 배당)
-const JUMP_BANK_ABI = [
-  // 거래
-  'function buy(uint256 amount, uint256 maxPay) external',
-  'function sell(uint256 amount) external',
-  // 스테이킹
-  'function stake(uint256 amount) external',
-  'function withdraw() external',
-  // 배당
-  'function claimDividend() external',
-  'function pendingDividend(address who) external view returns (uint256)',
-  // 조회
-  'function price() external view returns (uint256)',
+// ────────────────────────────────────────────────
+// BUT bank ABI (butBank.sol)
+// ────────────────────────────────────────────────
+const BUT_BANK_ABI = [
+  'function user(address who) external view returns (uint256 totalAllow, uint256 totalBuy, uint256 depo, uint256 stakingTime, uint256 lastClaim)',
   'function totalStaked() external view returns (uint256)',
-  'function act() external view returns (uint8)',
-  'function rate() external view returns (uint8)',
+  'function totalfee() external view returns (uint256)',
+  'function price() external view returns (uint256)',
   'function hexBalance() external view returns (uint256)',
   'function tokenInventory() external view returns (uint256)',
-  'function circulatingSupply() external view returns (uint256)',
-  'function user(address who) external view returns (uint256 totalAllow, uint256 totalBuy, uint256 depo, uint256 stakingTime, uint256 lastClaim)',
-  'function myDashboard(address who) external view returns (uint256 myActualQty, uint256 currentPriceWei, uint256 myMarketCapWei, uint256 myAvgBuyPriceWei, int256 myPnlWei, int256 myRoiBps_)',
-  'function autoStakeBps() external view returns (uint16)',
-  'function chartLength() external view returns (uint256)',
-  'function chartAt(uint256 idx) external view returns (uint256)',
   'function effectiveStaked() external view returns (uint256)',
-  'function divisor() external view returns (uint256)',
-  // 이벤트
-  'event Bought(address indexed who, uint256 amount, uint256 payHexWei, uint256 autoStaked, uint256 received)',
-  'event Sold(address indexed who, uint256 amount, uint256 recvHexWei, uint256 feeHexWei)',
-  'event Staked(address indexed who, uint256 amount)',
-  'event Withdrawn(address indexed who, uint256 amount)',
-  'event DividendClaimed(address indexed who, uint256 payHexWei)',
+  'function circulatingSupply() external view returns (uint256)',
 ];
 
 // ────────────────────────────────────────────────
@@ -138,19 +134,30 @@ function getProvider() {
 }
 
 function getPlatformContract(signerOrProvider) {
-  return new ethers.Contract(ADDRESSES.jumpPlatform, PLATFORM_ABI, signerOrProvider);
+  return new ethers.Contract(ADDRESSES.butPlatform, PLATFORM_ABI, signerOrProvider);
 }
 
+function getButTokenContract(signerOrProvider) {
+  return new ethers.Contract(ADDRESSES.butToken, BUT_TOKEN_ABI, signerOrProvider);
+}
+
+function getButBankContract(signerOrProvider) {
+  return new ethers.Contract(ADDRESSES.butBank, BUT_BANK_ABI, signerOrProvider);
+}
+
+// 하위 호환: 기존 코드에서 getHexContract() 호출 시 butToken 반환
 function getHexContract(signerOrProvider) {
-  return new ethers.Contract(ADDRESSES.jumpToken, HEX_ABI, signerOrProvider);
+  return getButTokenContract(signerOrProvider);
 }
 
-function getJumpTokenContract(signerOrProvider) {
-  return new ethers.Contract(ADDRESSES.jumpJump, JUMP_TOKEN_ABI, signerOrProvider);
-}
-
+// 하위 호환: 기존 jumpBank 호출은 butBank로 매핑
 function getJumpBankContract(signerOrProvider) {
-  return new ethers.Contract(ADDRESSES.jumpBank, JUMP_BANK_ABI, signerOrProvider);
+  return getButBankContract(signerOrProvider);
+}
+
+// 하위 호환: 기존 JumpToken 호출은 ButToken으로 매핑
+function getJumpTokenContract(signerOrProvider) {
+  return getButTokenContract(signerOrProvider);
 }
 
 /**
@@ -161,7 +168,7 @@ function walletFromKey(privateKey, provider) {
 }
 
 /**
- * 관리자 지갑 (jumpPlatform.owner – creditPoints 호출 권한)
+ * 관리자 지갑 (butPlatform.owner – adminCreditHex 호출 권한)
  * ADMIN_PRIVATE_KEY = Firebase Secret Manager에서 주입
  */
 function getAdminWallet() {
@@ -182,9 +189,8 @@ module.exports = {
   ADDRESSES,
   getProvider,
   getPlatformContract,
-  getHexContract,
-  getJumpTokenContract,
-  getJumpBankContract,
+  getButTokenContract,
+  getHexContract,        // 하위 호환 alias
   walletFromKey,
   getAdminWallet,
   estimateGasWithBuffer,

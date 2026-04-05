@@ -1,6 +1,6 @@
 /* /assets/css/pages/town_home.hero.css */
 /* ============================================================
-   VIDEO HERO – liveanywhere.me 스타일
+   IMAGE SLIDESHOW HERO
    ============================================================ */
 
 /* ── 섹션 컨테이너 ── */
@@ -12,12 +12,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* panel 클래스의 padding/border/shadow 재정의 */
   padding: 0 !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  background: transparent !important;
+  background: #0a1a2a !important;
 }
 
 /* ── 배경 레이어 ── */
@@ -27,24 +26,26 @@
   z-index: 0;
 }
 
-/* ── 비디오 엘리먼트 ── */
-.hero-video-el {
+/* ── 슬라이드 이미지 ── */
+.hero-slide {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  /* GPU 가속 */
-  will-change: transform;
-  transform: translateZ(0);
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+  will-change: opacity;
+}
+
+.hero-slide.active {
+  opacity: 1;
 }
 
 /* ── 비네트(어둠 그라데이션) ── */
 .hero-bg-vignette {
   position: absolute;
   inset: 0;
-  /* 아래·위 어둡게, 가운데는 반투명 */
   background:
     linear-gradient(180deg,
       rgba(0,0,0,.38) 0%,
@@ -53,12 +54,13 @@
       rgba(0,0,0,.55) 100%
     );
   pointer-events: none;
+  z-index: 1;
 }
 
 /* ── 텍스트 콘텐츠 ── */
 .hero-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 
   display: flex;
   flex-direction: column;
@@ -70,7 +72,6 @@
   max-width: 960px;
   min-height: 580px;
 
-  /* 기존 유리 카드 완전 제거 */
   background: transparent !important;
   border: none !important;
   backdrop-filter: none !important;
@@ -108,6 +109,31 @@
   gap: 14px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+/* ── 슬라이드 인디케이터 ── */
+.hero-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+}
+
+.hero-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.45);
+  transition: background 0.3s, transform 0.3s;
+  cursor: pointer;
+}
+
+.hero-dot.active {
+  background: #ffffff;
+  transform: scale(1.3);
 }
 
 /* ── 모바일 ── */

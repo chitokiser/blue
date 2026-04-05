@@ -29,7 +29,7 @@ const fnComment       = httpsCallable(fns, 'daoCommentProposal');
 
 // ── 온체인 스테이킹 조회 ─────────────────────────────────────────
 const OPBNB_RPC     = 'https://opbnb-mainnet-rpc.bnbchain.org';
-const JUMP_BANK     = '0x16752f8948ff2caA02e756c7C8fF0E04887A3a0E';
+const JUMP_BANK     = '0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33'; // butBank
 const BANK_ABI      = [
   'function user(address who) external view returns (uint256 totalAllow, uint256 totalBuy, uint256 depo, uint256 stakingTime, uint256 lastClaim)',
   'function totalStaked() external view returns (uint256)',

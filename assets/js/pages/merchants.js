@@ -498,13 +498,70 @@ function renderCards(list) {
 }
 
 // ── 검색 필터 ────────────────────────────────────────────────────────────────
-$('mcSearch').addEventListener('input', () => {
+function applyFilters() {
   const q = $('mcSearch').value.trim().toLowerCase();
-  const filtered = q ? allMerchants.filter(m =>
-    [m.name, m.career, m.region, m.description].some(v => (v||'').toLowerCase().includes(q))) : allMerchants;
+  const countryFilter = $('mcCountry').value || "";
+  const regionFilter = $('mcRegion').value || "";
+  const categoryFilter = $('mcCategory').value || "";
+
+  const filtered = allMerchants.filter(m => {
+    // 검색어 필터
+    if (q) {
+      const matchesSearch = [m.name, m.career, m.region, m.description].some(v =>
+        (v||'').toLowerCase().includes(q)
+      );
+      if (!matchesSearch) return false;
+    }
+
+    // 국가 필터
+    if (countryFilter) {
+      const merchantRegion = String(m.region || "").toLowerCase();
+      let detectedCountry = "";
+      if (merchantRegion.includes("베트남") || merchantRegion.includes("vietnam")) detectedCountry = "vietnam";
+      else if (merchantRegion.includes("한국") || merchantRegion.includes("korea")) detectedCountry = "korea";
+      else detectedCountry = "other";
+
+      if (countryFilter !== detectedCountry) return false;
+    }
+
+    // 지역 필터
+    if (regionFilter) {
+      const merchantRegion = String(m.region || "").toLowerCase();
+      if (regionFilter === "oceanpark1" && !merchantRegion.includes("오션파크1") && !merchantRegion.includes("oceanpark1")) return false;
+      if (regionFilter === "oceanpark2" && !merchantRegion.includes("오션파크2") && !merchantRegion.includes("oceanpark2")) return false;
+      if (regionFilter === "oceanpark3" && !merchantRegion.includes("오션파크3") && !merchantRegion.includes("oceanpark3")) return false;
+      if (regionFilter === "other") {
+        const hasOceanPark = merchantRegion.includes("오션파크") || merchantRegion.includes("oceanpark");
+        if (hasOceanPark) return false;
+      }
+    }
+
+    // 업종 필터
+    if (categoryFilter) {
+      const merchantCareer = String(m.career || "").toLowerCase();
+      if (categoryFilter === "restaurant" && !merchantCareer.includes("음식") && !merchantCareer.includes("식당") && !merchantCareer.includes("restaurant")) return false;
+      if (categoryFilter === "cafe" && !merchantCareer.includes("카페") && !merchantCareer.includes("cafe")) return false;
+      if (categoryFilter === "shopping" && !merchantCareer.includes("쇼핑") && !merchantCareer.includes("상점") && !merchantCareer.includes("shopping")) return false;
+      if (categoryFilter === "hotel" && !merchantCareer.includes("숙박") && !merchantCareer.includes("호텔") && !merchantCareer.includes("hotel")) return false;
+      if (categoryFilter === "entertainment" && !merchantCareer.includes("엔터") && !merchantCareer.includes("놀이") && !merchantCareer.includes("entertainment")) return false;
+      if (categoryFilter === "service" && !merchantCareer.includes("서비스") && !merchantCareer.includes("service")) return false;
+      if (categoryFilter === "other") {
+        const commonCategories = ["음식", "카페", "쇼핑", "숙박", "엔터", "서비스", "restaurant", "cafe", "shopping", "hotel", "entertainment", "service"];
+        if (commonCategories.some(cat => merchantCareer.includes(cat))) return false;
+      }
+    }
+
+    return true;
+  });
+
   renderCards(filtered);
   renderMarkers(filtered);
-});
+}
+
+$('mcSearch').addEventListener('input', applyFilters);
+$('mcCountry').addEventListener('change', applyFilters);
+$('mcRegion').addEventListener('change', applyFilters);
+$('mcCategory').addEventListener('change', applyFilters);
 
 // ── 이동거리 표시 업데이트 ────────────────────────────────────────────────────
 function updateDistDisplay() {
@@ -1587,11 +1644,10 @@ async function init() {
   // 지도 + 카드 즉시 표시
   if (window.google?.maps) {
     initMap();
-    renderMarkers(allMerchants);
     renderBoxMarkers();
     fitMapToAllMarkers();
   }
-  renderCards(allMerchants);
+  applyFilters();
 
   // 버튼 이벤트
   $('btnMyLocation')?.addEventListener('click', showMyLocation);

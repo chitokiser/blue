@@ -31,18 +31,18 @@ async function loadAndRender() {
     if (!hasAccess) {
       const pct = minStake > 0 ? Math.min(100, Math.round((userStaked / minStake) * 100)) : 0;
       const subEl = $('coopDeniedSub');
-      if (subEl) subEl.textContent = `최소 ${minStake.toLocaleString()} JUMP 스테이킹 필요`;
+      if (subEl) subEl.textContent = `최소 ${minStake.toLocaleString()} BUT 스테이킹 필요`;
       const fillEl = $('coopStakeFill');
       if (fillEl) fillEl.style.width = pct + '%';
       const progEl = $('coopDeniedProgress');
-      if (progEl) progEl.textContent = `현재 ${userStaked.toLocaleString()} / ${minStake.toLocaleString()} JUMP`;
+      if (progEl) progEl.textContent = `현재 ${userStaked.toLocaleString()} / ${minStake.toLocaleString()} BUT`;
       show('coopDenied', true);
       return;
     }
 
     // 접근 가능 — 상품 그리드
     const badgeEl = $('coopAccessBadge');
-    if (badgeEl) badgeEl.textContent = `회원 인증됨 (스테이킹 ${userStaked.toLocaleString()} JUMP)`;
+    if (badgeEl) badgeEl.textContent = `회원 인증됨 (스테이킹 ${userStaked.toLocaleString()} BUT)`;
 
     const grid = $('coopGrid');
     if (products.length === 0) {

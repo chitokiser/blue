@@ -4,14 +4,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>마이페이지 - Jump</title>
+  <title>탄소 자산 대시보드 - 블루에코DAO</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
   <link rel="stylesheet" href="/assets/css/header.css" />
   <link rel="stylesheet" href="/assets/css/pages/apply-guide.css" />
   <link rel="stylesheet" href="/assets/css/pages/mypage.css" />
 
-  <script>window.__jackpotApiBase = "https://jumper-jackpot-production.up.railway.app";</script>
+  <script>window.__jackpotApiBase = "https://buter-jackpot-production.up.railway.app";</script>
   <script src="/assets/js/partials.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
 
@@ -135,7 +135,7 @@
 
     <!-- ── 로그인 필요 ── -->
     <section class="panel" id="needLoginPanel" style="display:none;">
-      <h1 class="title">마이페이지</h1>
+      <h1 class="title">탄소 자산 대시보드</h1>
       <p class="desc">로그인이 필요합니다.</p>
       <button class="btn btn--primary" id="btnLoginPage" type="button">구글 로그인</button>
     </section>
@@ -145,26 +145,26 @@
 
       <!-- 회원가입 미완료 안내 -->
       <div id="noProfilePanel" style="display:none;" class="panel mp-section">
-        <h2 class="mp-section-title">회원가입이 필요합니다</h2>
+        <h2 class="mp-section-title">탄소 생태계 참여가 필요합니다</h2>
         <p class="hint" style="margin:8px 0 16px;">
-          수탁 지갑 생성 및 서비스 이용을 위해 먼저 회원가입을 완료해 주세요.
+          탄소 자산 지갑 생성 및 서비스 이용을 위해 먼저 탄소 생태계에 참여해 주세요.
         </p>
-        <a href="/register.html" class="btn btn--primary">회원가입 하러 가기</a>
+        <a href="/register.html" class="btn btn--primary">탄소 생태계 참여하기</a>
       </div>
 
-      <!-- 멘토 연결 안내 배너 -->
+      <!-- 추천인 연결 안내 배너 -->
       <div id="mentorNotice" class="panel mp-section" style="display:none; border-left:4px solid var(--accent); background:var(--surface2,#f9f5ff);">
         <p style="margin:0; font-size:0.95em;">
-          <strong>⚠️ 멘토 연결 필요</strong> —
-          가맹점 결제 시 <b>경험치(EXP)</b>와 <b>포인트</b>를 받으려면 멘토가 연결되어 있어야 합니다.
-          <a href="#mentorRequestBox" style="color:var(--accent);">멘토 등록하기 ↓</a>
+          <strong>⚠️ 탄소 추천인 연결 필요</strong> —
+          탄소 활동 시 <b>탄소 기여치(EXP)</b>와 <b>탄소 포인트</b>를 받으려면 추천인이 연결되어 있어야 합니다.
+          <a href="#mentorRequestBox" style="color:var(--accent);">탄소 추천인 등록하기 ↓</a>
         </p>
       </div>
 
       <!-- 기본 정보 -->
       <section class="panel mp-section">
         <div class="mp-section-head">
-          <h2 class="mp-section-title">내 정보</h2>
+          <h2 class="mp-section-title">탄소 프로필</h2>
           <a href="/register.html" class="btn btn--sm">수정</a>
         </div>
         <div class="mp-kv-list" id="profileInfo">
@@ -174,19 +174,29 @@
         </div>
       </section>
 
-      <!-- 수탁 지갑 -->
+      <!-- 탄소 자산 지갑 -->
       <section class="panel mp-section">
         <div class="mp-section-head">
-          <h2 class="mp-section-title">수탁 지갑</h2>
+          <h2 class="mp-section-title">탄소 자산 지갑</h2>
           <div style="display:flex; gap:6px;">
             <button class="btn btn--sm" id="btnConnectMetaMask" type="button" style="display:none;">MetaMask 연결</button>
             <button class="btn btn--sm" id="btnCreateWallet" type="button" style="display:none;">지갑 생성</button>
           </div>
         </div>
 
+        <div class="panel" style="margin-bottom: 20px; background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac;">
+          <h3 style="margin: 0 0 10px; color: #15803d; font-size: 1.1em;">💰 참여형 수익 구조</h3>
+          <ul style="margin: 0; padding-left: 20px; color: #166534;">
+            <li>탄소 활동으로 탄소 포인트 적립 → HEX 토큰 전환</li>
+            <li>탄소 추천인 네트워크를 통한 추가 리워드</li>
+            <li>탄소 기여 레벨업으로 전환율 증가 (레벨 × 포인트 ÷ 10)</li>
+            <li>지속가능 산업 참여로 장기적 경제적 혜택</li>
+          </ul>
+        </div>
+
         <div id="walletInfo">
           <div class="mp-kv" style="align-items:flex-start;">
-            <span class="k">지갑 주소</span>
+            <span class="k">탄소 자산 지갑 주소</span>
             <span class="v" style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:wrap;">
               <span class="mono" id="walletAddress" style="word-break:break-all; font-size:0.82em; flex:1; min-width:0;">-</span>
               <button id="btnCopyWallet" type="button" title="주소 복사"
@@ -198,15 +208,15 @@
             </span>
           </div>
           <div class="mp-kv">
-            <span class="k">온체인 등록</span>
+            <span class="k">탄소 네트워크 등록</span>
             <span class="v" id="onChainStatus">조회 중...</span>
           </div>
           <div class="mp-kv" id="levelRow" style="display:none;">
-            <span class="k">레벨</span>
+            <span class="k">탄소 기여 레벨</span>
             <span class="v" id="levelDisplay">-</span>
           </div>
           <div class="mp-kv" id="expRow" style="display:none;">
-            <span class="k">경험치 (EXP)</span>
+            <span class="k">탄소 기여치 (EXP)</span>
             <span class="v"><span id="expDisplay">-</span></span>
           </div>
           <div id="expBarRow" style="display:none; padding:2px 0 10px 0;">
@@ -218,11 +228,11 @@
           <div class="mp-kv" id="levelUpRow" style="display:none;">
             <span class="k"></span>
             <span class="v">
-              <button class="btn btn--primary btn--sm" id="btnLevelUp" type="button">레벨업 가능! →</button>
+              <button class="btn btn--primary btn--sm" id="btnLevelUp" type="button">탄소 기여 레벨업 가능! →</button>
             </span>
           </div>
           <div class="mp-kv" id="pointRow" style="display:none;">
-            <span class="k">포인트(hex로 변경가능)</span>
+            <span class="k">탄소 포인트(HEX로 전환 가능)</span>
             <span class="v accent" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <span id="pointDisplay">-</span>
               <button class="btn btn--primary btn--sm" id="btnRedeemPoints" type="button">HEX로 전환</button>
@@ -230,20 +240,20 @@
           </div>
           <div id="redeemPointsResult" class="mp-result-box" style="display:none;margin-top:6px;"></div>
           <div class="mp-kv" id="mentorAddrRow" style="display:none;">
-            <span class="k">나의 멘토</span>
+            <span class="k">나의 탄소 추천인</span>
             <span class="v mono" id="mentorAddrDisplay" style="font-size:0.78em; word-break:break-all;">-</span>
           </div>
           <div class="mp-kv" id="walletHexRow" style="display:none;">
             <span class="k">보유 HEX</span>
             <span class="v accent" id="walletHexDisplay">-</span>
           </div>
-          <div class="mp-kv" id="walletJumpRow" style="display:none;">
-            <span class="k">보유 JUMP</span>
-            <span class="v accent" id="walletJumpDisplay">-</span>
+          <div class="mp-kv" id="walletbutRow" style="display:none;">
+            <span class="k">보유 탄소 토큰</span>
+            <span class="v accent" id="walletbutDisplay">-</span>
           </div>
-          <div class="mp-kv" id="walletJumpStakedRow" style="display:none;">
-            <span class="k">스테이킹 JUMP</span>
-            <span class="v accent" id="walletJumpStakedDisplay">-</span>
+          <div class="mp-kv" id="walletbutStakedRow" style="display:none;">
+            <span class="k">스테이킹 탄소 토큰</span>
+            <span class="v accent" id="walletbutStakedDisplay">-</span>
           </div>
         </div>
 
@@ -336,9 +346,9 @@
         <!-- 입금 계좌 안내 (항상 표시) -->
         <div class="mp-result-box" style="margin-bottom:14px;">
           <div style="margin:0 0 8px; font-size:0.82em; font-weight:700; color:var(--accent);">🇰🇷 한국 계좌 (KRW 입금)</div>
-          <div class="mp-kv"><span class="k">은행</span><span class="v">IM뱅크</span></div>
-          <div class="mp-kv"><span class="k">계좌번호</span><span class="v mono">253-08-000869-7</span></div>
-          <div class="mp-kv"><span class="k">예금주</span><span class="v">신헌철</span></div>
+          <div class="mp-kv"><span class="k">은행</span><span class="v">하나은행</span></div>
+          <div class="mp-kv"><span class="k">계좌번호</span><span class="v mono">381. 19. 03076. 2</span></div>
+          <div class="mp-kv"><span class="k">예금주</span><span class="v">오용진</span></div>
           <div style="margin:10px 0 8px; font-size:0.82em; font-weight:700; color:#0ea5e9;">🇻🇳 베트남 계좌 (VND 입금)</div>
           <div class="mp-kv"><span class="k">은행</span><span class="v">TECHCOM BANK</span></div>
           <div class="mp-kv"><span class="k">계좌번호</span><span class="v mono">19037852768012</span></div>
@@ -475,40 +485,40 @@
         </div>
       </section>
 
-      <!-- 포인트 · 레벨 안내 -->
+      <!-- 탄소 포인트 · 기여 레벨 안내 -->
       <section class="panel mp-section">
         <div class="mp-section-head">
-          <h2 class="mp-section-title">포인트 · 레벨 안내</h2>
+          <h2 class="mp-section-title">탄소 포인트 · 기여 레벨 안내</h2>
         </div>
         <dl style="margin:0; display:grid; gap:10px;">
           <div>
-            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">멘토 등록 (필수)</dt>
-            <dd style="margin:0; font-size:0.88em; color:var(--muted,#6b7280);">온체인 등록 시 멘토 주소를 입력해야 합니다. 멘토 없이 등록하면 기본 멘토로 연결되어 경험치·포인트 적립이 되지 않을 수 있습니다.</dd>
+            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">탄소 추천인 등록 (필수)</dt>
+            <dd style="margin:0; font-size:0.88em; color:var(--muted,#6b7280);">탄소 네트워크 등록 시 추천인 주소를 입력해야 합니다. 추천인 없이 등록하면 기본 추천인으로 연결되어 탄소 기여치·탄소 포인트 적립이 되지 않을 수 있습니다.</dd>
           </div>
           <div>
-            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">포인트란?</dt>
-            <dd style="margin:0; font-size:0.88em; color:var(--muted,#6b7280);">내 하위 회원이 가맹점에서 결제할 때 수수료 일부가 멘토(나)에게 포인트로 적립됩니다. 포인트는 HEX 토큰으로 전환할 수 있습니다.</dd>
+            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">탄소 포인트란?</dt>
+            <dd style="margin:0; font-size:0.88em; color:var(--muted,#6b7280);">내 탄소 추천인이 탄소 활동을 할 때 수수료 일부가 추천인(나)에게 탄소 포인트로 적립됩니다. 탄소 포인트는 HEX 토큰으로 전환할 수 있습니다.</dd>
           </div>
           <div>
-            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">경험치 (EXP)</dt>
-            <dd style="margin:0; font-size:0.88em; color:var(--muted,#6b7280);">내가 가맹점에서 결제할 때 수수료에 비례해 경험치가 쌓입니다. 경험치로 레벨업을 할 수 있습니다.</dd>
+            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">탄소 기여치 (EXP)</dt>
+            <dd style="margin:0; font-size:0.88em; color:var(--muted,#6b7280);">내가 탄소 활동을 할 때 수수료에 비례해 탄소 기여치가 쌓입니다. 탄소 기여치로 탄소 기여 레벨업을 할 수 있습니다.</dd>
           </div>
           <div>
-            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">레벨 & 레벨업</dt>
+            <dt style="font-weight:600; font-size:0.9em; color:var(--accent,#7c3aed); margin-bottom:2px;">탄소 기여 레벨 & 레벨업</dt>
             <dd style="margin:0; font-size:0.88em; color:var(--muted,#6b7280);">
-              레벨이 높을수록 포인트 → HEX 전환 시 더 많이 받습니다.<br>
-              <strong>전환량 = 포인트 × 레벨 ÷ 10</strong><br>
-              레벨업 필요 EXP = 현재레벨² × 10,000<br>
+              탄소 기여 레벨이 높을수록 탄소 포인트 → HEX 전환 시 더 많이 받습니다.<br>
+              <strong>전환량 = 탄소 포인트 × 탄소 기여 레벨 ÷ 10</strong><br>
+              탄소 기여 레벨업 필요 EXP = 현재 탄소 기여 레벨² × 10,000<br>
               <span style="font-size:0.9em;">Lv.1→2: 10,000 EXP &nbsp;·&nbsp; Lv.2→3: 40,000 EXP &nbsp;·&nbsp; Lv.3→4: 90,000 EXP</span>
             </dd>
           </div>
         </dl>
       </section>
 
-      <!-- 나의 멘티 목록 -->
+      <!-- 나의 탄소 추천인 목록 -->
       <section class="panel mp-section" id="menteeSection" style="display:none;">
         <div class="mp-section-head">
-          <h2 class="mp-section-title">나의 멘티</h2>
+          <h2 class="mp-section-title">나의 탄소 추천인</h2>
           <button class="btn btn--sm" id="btnRefreshMentees" type="button">새로고침</button>
         </div>
         <div id="menteeList" class="mp-table-wrap">
@@ -516,10 +526,10 @@
         </div>
       </section>
 
-      <!-- 거래 내역 (온체인) -->
+      <!-- 탄소 자산 거래 내역 -->
       <section class="panel mp-section" id="txSection" style="display:none;">
         <div class="mp-section-head">
-          <h2 class="mp-section-title">거래 내역</h2>
+          <h2 class="mp-section-title">탄소 자산 거래 내역</h2>
           <button class="btn btn--sm" id="btnRefreshTx" type="button">새로고침</button>
         </div>
         <!-- 수입 / 지출 요약 -->

@@ -163,7 +163,7 @@ async function adminApproveHex(adminUid, amountWeiStr = null) {
   const hexContract = getHexContract(adminWallet);
 
   const amount = amountWeiStr ? BigInt(amountWeiStr) : ethers.MaxUint256;
-  const tx     = await hexContract.approve(ADDRESSES.jumpPlatform, amount);
+  const tx     = await hexContract.approve(ADDRESSES.butPlatform, amount);
   const receipt= await tx.wait();
 
   const allowanceDisplay = amount === ethers.MaxUint256
@@ -216,8 +216,8 @@ async function adminGetContractStatus() {
     adminBnbBal,
     rates,
   ] = await Promise.all([
-    hexContract.balanceOf(ADDRESSES.jumpPlatform),
-    hexContract.allowance(adminWallet.address, ADDRESSES.jumpPlatform),
+    hexContract.balanceOf(ADDRESSES.butPlatform),
+    hexContract.allowance(adminWallet.address, ADDRESSES.butPlatform),
     hexContract.balanceOf(adminWallet.address),
     provider.getBalance(adminWallet.address),
     fetchExchangeRates().catch(() => null),
@@ -231,7 +231,7 @@ async function adminGetContractStatus() {
 
   return {
     adminAddress:     adminWallet.address,
-    contractAddress:  ADDRESSES.jumpPlatform,
+    contractAddress:  ADDRESSES.butPlatform,
 
     // 컨트랙트 HEX 잔액
     contractHexWei:          contractHexBal.toString(),

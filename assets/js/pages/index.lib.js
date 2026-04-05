@@ -143,6 +143,7 @@ export function toItemViewModel(docId, data) {
     id: docId,
     title: d.title || d.name || "",
     region: d.region || d.area || "",
+    country: d.country || "",
     category: d.category || d.cat || "",
     price: d.price ?? d.amount ?? "",
     currency: d.currency || "KRW",

@@ -9,6 +9,7 @@ const { decrypt } = require('../wallet/crypto');
 const {
   getProvider,
   getHexContract,
+  getButBankContract,
   getJumpBankContract,
   walletFromKey,
   getAdminWallet,
@@ -56,8 +57,8 @@ async function getCoopAccess(uid) {
   let userStaked = 0;
   if (address) {
     try {
-      const jumpBank = getJumpBankContract(getProvider());
-      const userInfo = await jumpBank.user(address);
+      const butBank = getButBankContract(getProvider());
+      const userInfo = await butBank.user(address);
       userStaked     = Number(userInfo.depo);
     } catch (_) {}
   }

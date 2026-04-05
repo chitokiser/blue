@@ -78,6 +78,53 @@ function matchSearch(it, q) {
   return hay.includes(s);
 }
 
+function matchCategory(it, countryFilter, regionFilter, typeFilter) {
+  // 국가 필터 (region에서 추출 또는 별도 country 필드 사용)
+  if (countryFilter) {
+    const itemRegion = String(it.region || "").toLowerCase();
+    const itemCountry = String(it.country || "").toLowerCase();
+
+    // region에 국가 정보가 포함된 경우 추출
+    let detectedCountry = itemCountry;
+    if (!detectedCountry) {
+      if (itemRegion.includes("베트남") || itemRegion.includes("vietnam")) detectedCountry = "vietnam";
+      else if (itemRegion.includes("한국") || itemRegion.includes("korea")) detectedCountry = "korea";
+      else detectedCountry = "other";
+    }
+
+    if (countryFilter !== detectedCountry) return false;
+  }
+
+  // 지역 필터
+  if (regionFilter) {
+    const itemRegion = String(it.region || "").toLowerCase();
+    if (regionFilter === "oceanpark1" && !itemRegion.includes("오션파크1") && !itemRegion.includes("oceanpark1")) return false;
+    if (regionFilter === "oceanpark2" && !itemRegion.includes("오션파크2") && !itemRegion.includes("oceanpark2")) return false;
+    if (regionFilter === "oceanpark3" && !itemRegion.includes("오션파크3") && !itemRegion.includes("oceanpark3")) return false;
+    if (regionFilter === "other") {
+      const hasOceanPark = itemRegion.includes("오션파크") || itemRegion.includes("oceanpark");
+      if (hasOceanPark) return false;
+    }
+  }
+
+  // 숙박종류 필터
+  if (typeFilter) {
+    const itemType = String(it.category || "").toLowerCase();
+    if (typeFilter === "homestay" && !itemType.includes("홈스테이") && !itemType.includes("homestay")) return false;
+    if (typeFilter === "hotel" && !itemType.includes("호텔") && !itemType.includes("hotel")) return false;
+    if (typeFilter === "motel" && !itemType.includes("모텔") && !itemType.includes("motel")) return false;
+    if (typeFilter === "guesthouse" && !itemType.includes("게스트하우스") && !itemType.includes("guesthouse")) return false;
+    if (typeFilter === "resort" && !itemType.includes("리조트") && !itemType.includes("resort")) return false;
+    if (typeFilter === "villa" && !itemType.includes("빌라") && !itemType.includes("villa")) return false;
+    if (typeFilter === "other") {
+      const commonTypes = ["홈스테이", "호텔", "모텔", "게스트하우스", "리조트", "빌라", "homestay", "hotel", "motel", "guesthouse", "resort", "villa"];
+      if (commonTypes.some(type => itemType.includes(type))) return false;
+    }
+  }
+
+  return true;
+}
+
 function sortItems(items, mode) {
   const arr = items.slice();
   if (mode === "rating") {
@@ -99,8 +146,13 @@ function sortItems(items, mode) {
 function renderGrid(items) {
   const q = ($("qSearch")?.value || "").trim();
   const sortMode = $("qSort")?.value || "recent";
+  const countryFilter = $("qCountry")?.value || "";
+  const regionFilter = $("qRegion")?.value || "";
+  const typeFilter = $("qType")?.value || "";
 
-  const filtered = items.filter((it) => matchSearch(it, q));
+  const filtered = items.filter((it) => {
+    return matchSearch(it, q) && matchCategory(it, countryFilter, regionFilter, typeFilter);
+  });
   const sorted = sortItems(filtered, sortMode);
 
   const state = $("itemsState");
@@ -186,6 +238,9 @@ async function loadPublishedHomestays() {
     renderGrid(items);
     $("qSearch")?.addEventListener("input", () => renderGrid(items));
     $("qSort")?.addEventListener("change", () => renderGrid(items));
+    $("qCountry")?.addEventListener("change", () => renderGrid(items));
+    $("qRegion")?.addEventListener("change", () => renderGrid(items));
+    $("qType")?.addEventListener("change", () => renderGrid(items));
   } catch (e) {
     console.error(e);
     const state = $("itemsState");

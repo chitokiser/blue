@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>회원가입 - Jump</title>
+  <title>블루에코DAO 회원가입 - 탄소중립 생태계 참여</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
   <link rel="stylesheet" href="/assets/css/header.css" />
@@ -18,8 +18,18 @@
 
   <main class="page">
     <section class="panel">
-      <h1 class="title">회원가입</h1>
-      <p class="desc">Google 로그인 후 기본 정보를 입력해 주세요. 수탁 지갑이 자동으로 생성됩니다.</p>
+      <h1 class="title">블루에코DAO 회원가입</h1>
+      <p class="desc">블루에코DAO는 탄소를 중심으로 한 지속가능한 산업 및 자산 생태계를 구축합니다. 탄소중립 활동에 참여하여 경제적 혜택과 환경 기여를 동시에 실현하세요.</p>
+
+      <div class="panel" style="margin-bottom: 20px; background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac;">
+        <h3 style="margin: 0 0 10px; color: #15803d; font-size: 1.1em;">🌱 탄소중립 생태계 참여 혜택</h3>
+        <ul style="margin: 0; padding-left: 20px; color: #166534;">
+          <li>탄소 활동으로 탄소 포인트 적립 및 HEX 토큰 전환</li>
+          <li>지속가능 산업 참여를 통한 경제적 수익 실현</li>
+          <li>DAO 거버넌스를 통한 참여형 의사결정</li>
+          <li>탄소 기여 레벨업으로 더 높은 보상 획득</li>
+        </ul>
+      </div>
 
       <div id="regState" class="state"></div>
 
@@ -52,11 +62,11 @@
           <div id="phoneSaveMsg" style="font-size:0.82em;margin-top:4px;"></div>
         </div>
         <div class="status-row" id="walletRow" style="display:none;">
-          <div class="k">수탁 지갑 주소</div>
+          <div class="k">탄소 자산 지갑 주소</div>
           <div class="v mono" id="walletAddr">-</div>
         </div>
         <div class="status-row" id="onChainRow" style="display:none;">
-          <div class="k">온체인 등록</div>
+          <div class="k">탄소 네트워크 등록</div>
           <div class="v" id="onChainStatus">-</div>
         </div>
         <a href="/index.html" class="btn btn--primary" style="margin-top:16px;display:inline-block;">홈으로</a>
@@ -76,9 +86,9 @@
         </label>
 
         <label class="field">
-          <span>멘토 지갑 주소 <em class="req">*</em></span>
+          <span>추천인 지갑 주소 (탄소 기여자) <em class="req">*</em></span>
           <input type="text" id="mentorAddress" maxlength="42" placeholder="예: 0xAbCd...1234" autocomplete="off" spellcheck="false" />
-          <small class="help-text">추천인(멘토)의 수탁 지갑 주소 · 0x로 시작하는 42자리 · 멘토가 없으면 기본 주소가 자동 입력됩니다</small>
+          <small class="help-text">추천인(탄소 기여자)의 수탁 지갑 주소 · 0x로 시작하는 42자리 · 추천인이 없으면 기본 주소가 자동 입력됩니다</small>
         </label>
 
         <div class="reg-divider">이용 약관</div>
@@ -94,24 +104,24 @@
         <label class="check">
           <input type="checkbox" id="agreeWallet" />
           <span>
-            서버 수탁 지갑(私有鍵 서버 보관) 생성 및 온체인 가입에 동의합니다 <em class="req">*</em>
+            서버 수탁 지갑(탄소 자산 관리) 생성 및 탄소 네트워크 가입에 동의합니다 <em class="req">*</em>
           </span>
         </label>
 
         <!-- 진행 상황 -->
         <div id="stepBox" class="step-box" style="display:none;">
-          <div class="step" id="step1">① 정보 저장</div>
-          <div class="step" id="step2">② 수탁 지갑 생성</div>
-          <div class="step" id="step3">③ 온체인 등록</div>
+          <div class="step" id="step1">① 탄소 프로필 저장</div>
+          <div class="step" id="step2">② 탄소 자산 지갑 생성</div>
+          <div class="step" id="step3">③ 탄소 네트워크 등록</div>
         </div>
 
         <div class="actions">
-          <button class="btn btn--primary" type="submit" id="btnRegister">가입 완료</button>
+          <button class="btn btn--primary" type="submit" id="btnRegister">탄소 생태계 참여 완료</button>
         </div>
 
         <p class="hint">
-          멘토 지갑 주소 입력 시 수탁 지갑 생성과 온체인 회원 등록이 자동으로 진행됩니다.<br>
-          멘토 주소를 모르거나 없으면 기본 멘토 주소가 자동으로 입력됩니다.
+          추천인 지갑 주소 입력 시 탄소 자산 지갑 생성과 탄소 네트워크 회원 등록이 자동으로 진행됩니다.<br>
+          추천인 주소를 모르거나 없으면 기본 추천인 주소가 자동으로 입력됩니다.
         </p>
       </form>
     </section>

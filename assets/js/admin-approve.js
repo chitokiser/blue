@@ -567,26 +567,34 @@ async function loadDeposits() {
   setState("입금 대기 목록 로딩중…");
 
   try {
-    const q = query(
-      collection(db, "deposits"),
-      where("status", "in", ["pending", "processing"]),
-      orderBy("requestedAt", "desc"),
-      limit(100)
-    );
-    const snap = await getDocs(q);
+    const fn = httpsCallable(functions, "listPendingDeposits");
+    const res = await fn();
+    const rows = Array.isArray(res.data) ? res.data : [];
 
-    if (snap.empty) {
+    if (!rows.length) {
       setState("대기중인 입금 요청 없음");
       depositList.innerHTML = '<p class="muted" style="padding:12px 0;">대기중인 입금 요청이 없습니다.</p>';
       return;
     }
 
-    setState(`입금 대기 ${snap.size}건`);
-    snap.forEach((d) => {
-      const v = d.data();
-      const refCode = v.refCode || d.id;
-      const dateStr = v.requestedAt?.seconds
-        ? new Date(v.requestedAt.seconds * 1000).toLocaleString("ko")
+    rows.sort((a, b) => {
+      const ta = a.requestedAt ? Date.parse(a.requestedAt) : 0;
+      const tb = b.requestedAt ? Date.parse(b.requestedAt) : 0;
+      return tb - ta;
+    });
+
+    setState(`입금 대기 ${rows.length}건`);
+    rows.forEach((v) => {
+      const refCode = v.refCode || v.uid || "-";
+      const requestedAt = v.requestedAt;
+      const dateStr = requestedAt
+        ? (typeof requestedAt === "string"
+            ? new Date(requestedAt).toLocaleString("ko")
+            : (requestedAt.seconds
+                ? new Date(requestedAt.seconds * 1000).toLocaleString("ko")
+                : requestedAt.toDate
+                  ? new Date(requestedAt.toDate()).toLocaleString("ko")
+                  : "-"))
         : "-";
       const statusBadge = v.status === "processing"
         ? '<span class="badge" style="background:#f59e0b;">처리중</span>'
@@ -727,7 +735,7 @@ async function checkHexAllowance() {
 async function execApproveHex() {
   if (!isAdminUser) { alert("관리자 권한이 없습니다."); return; }
   const ok = confirm(
-    "jumpPlatform 컨트랙트에 HEX 무한 승인(MaxUint256)을 실행합니다.\n" +
+    "butPlatform 컨트랙트에 BUT 무한 승인(MaxUint256)을 실행합니다.\n" +
     "이 작업은 관리자 지갑에서 서명됩니다. 계속하시겠습니까?"
   );
   if (!ok) return;
@@ -1235,7 +1243,7 @@ async function execOwnerDepositHex() {
   // HEX → wei (18 decimals)
   const amountWei = (BigInt(Math.round(amountHex * 1e9)) * BigInt(1e9)).toString();
 
-  if (!confirm(`${amountHex} HEX를 jumpPlatform 컨트랙트에 충전합니다.\n계속하시겠습니까?`)) return;
+  if (!confirm(`${amountHex} BUT를 butPlatform 컨트랙트에 충전합니다.\n계속하시겠습니까?`)) return;
 
   setState("컨트랙트 HEX 충전 중…");
   try {

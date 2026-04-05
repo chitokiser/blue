@@ -62,31 +62,51 @@ function formatFiatLine(hexValue) {
   return `약 ${Math.round(krw).toLocaleString("ko-KR")} KRW / ${Math.round(vnd).toLocaleString("ko-KR")} VND`;
 }
 
-function jackpotEndpoints(path) {
-  const base = String(window.__jackpotApiBase || "").trim().replace(/\/$/, "");
-  if (base) return [`${base}${path}`];
+// ── 온체인 butPlatform 계약 상수 ────────────────────────────────────────
+const OPBNB_RPC = 'https://opbnb-mainnet-rpc.bnbchain.org';
+const BUTPLATFORM_ADDR = '0x93ded35508F56BA53C5653Eca736aDdfD994AFcd';
 
-  const host = (location.hostname || "").trim().toLowerCase();
-  const isLocal = host === "localhost" || host === "127.0.0.1";
-  const isApiOrigin = location.port === "8787";
-
-  if (isApiOrigin) return [`${location.origin}${path}`];
-  if (isLocal) return [`http://${host || "127.0.0.1"}:8787${path}`, path];
-  return [path];
+// ethers v6 UMD 버전 (global 사용)
+let _ethersLoaded = false;
+async function loadEthersLib() {
+  if (_ethersLoaded || window.ethers) return true;
+  try {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js';
+    await new Promise((resolve, reject) => {
+      script.onload = () => { _ethersLoaded = true; resolve(); };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+    return true;
+  } catch (e) {
+    console.warn('ethers lib load failed:', e.message);
+    return false;
+  }
 }
 
-async function fetchJackpotJson(path) {
-  let lastError = null;
-  for (const url of jackpotEndpoints(path)) {
-    try {
-      const res = await fetch(url, { method: "GET", cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP_${res.status}`);
-      return await res.json();
-    } catch (e) {
-      lastError = e;
-    }
+async function loadJackpotOnchain() {
+  try {
+    // ethers 라이브러리 로드
+    const ok = await loadEthersLib();
+    if (!ok || !window.ethers) throw new Error('ethers not loaded');
+
+    const { ethers } = window;
+    const provider = new ethers.JsonRpcProvider(OPBNB_RPC);
+    
+    // 간단한 호출: jackpotAccWei 읽기 (ABI 최소화)
+    // BUTPLATFORM에 직접 call 호출
+    const abi = ['function jackpotAccWei() view returns (uint256)'];
+    const contract = new ethers.Contract(BUTPLATFORM_ADDR, abi, provider);
+    
+    const jackpotWei = await contract.jackpotAccWei();
+    const jackpotHex = Number(jackpotWei) / 1e18;
+    
+    return { jackpotHex };
+  } catch (e) {
+    console.warn('loadJackpotOnchain failed:', e.message);
+    return null;
   }
-  throw lastError || new Error("JACKPOT_FETCH_FAILED");
 }
 
 function setJackpotUi({ valueText, fiatText, updatedText, winnerCountText, highestWinText }) {
@@ -105,82 +125,64 @@ function setJackpotUi({ valueText, fiatText, updatedText, winnerCountText, highe
 
 async function loadJackpotCurrent() {
   try {
-    const currentJson = await fetchJackpotJson("/jackpot/current");
-    const current = currentJson?.data || {};
+    const chainData = await loadJackpotOnchain();
     const now = new Date();
 
+    if (!chainData) {
+      setJackpotUi({
+        valueText: "연결 대기중",
+        fiatText: "약 - KRW / - VND",
+        updatedText: "온체인 데이터 로드 실패",
+        winnerCountText: "-",
+        highestWinText: "- HEX",
+      });
+      return;
+    }
+
+    const { jackpotHex } = chainData;
+
+    // 당첨자 정보는 Firestore에서 조회 (선택사항)
     let winnerCountText = "-";
     let highestWinText = "- HEX";
 
     try {
-      const statsJson = await fetchJackpotJson("/jackpot/public-stats");
-      const stats = statsJson?.data || {};
-      winnerCountText = formatCount(stats.winnerCount);
-      highestWinText = formatHexForUi(stats.highestWinHex);
+      const snap = await getDocs(
+        query(collection(db, "jackpot_winners"), orderBy("timestamp", "desc"), limit(100))
+      );
+      if (!snap.empty) {
+        winnerCountText = formatCount(snap.size);
+        // 최고 당첨금 찾기
+        let maxWei = 0n;
+        snap.forEach(doc => {
+          const data = doc.data();
+          const wei = BigInt(data.winAmount || 0);
+          if (wei > maxWei) maxWei = wei;
+        });
+        if (maxWei > 0n) {
+          highestWinText = formatHexForUi(Number(maxWei) / 1e18);
+        }
+      }
     } catch (e) {
-      console.warn("loadJackpot stats failed:", e);
+      console.warn("loadJackpot winners Firestore failed:", e.message);
     }
 
     setJackpotUi({
-      valueText: formatHexForUi(current.jackpotDisplayHex),
-      fiatText: formatFiatLine(current.jackpotDisplayHex),
-      updatedText: `${now.toLocaleTimeString("ko-KR", { hour12: false })} 기준 조회`,
+      valueText: formatHexForUi(jackpotHex),
+      fiatText: formatFiatLine(jackpotHex),
+      updatedText: `${now.toLocaleTimeString("ko-KR", { hour12: false })} 온체인 조회`,
       winnerCountText,
       highestWinText,
     });
   } catch (e) {
-    console.warn("loadJackpotCurrent failed:", e);
-    try {
-      await loadJackpotFirestoreFallback();
-    } catch (fe) {
-      console.warn("loadJackpotFirestoreFallback failed:", fe);
-      setJackpotUi({
-        valueText: "연결 대기중",
-        fiatText: "약 - KRW / - VND",
-        updatedText: "잭팟 서버에 연결할 수 없습니다",
-        winnerCountText: "-",
-        highestWinText: "- HEX",
-      });
-    }
+    console.warn("loadJackpotCurrent failed:", e.message);
+    setJackpotUi({
+      valueText: "연결 대기중",
+      fiatText: "약 - KRW / - VND",
+      updatedText: "잭팟 데이터를 불러올 수 없습니다",
+      winnerCountText: "-",
+      highestWinText: "- HEX",
+    });
   }
-}
-
-async function loadJackpotFirestoreFallback() {
-  let winnerCountText = "-";
-  let highestWinText = "- HEX";
-  let valueText = "연결 대기중";
-  let fiatText = "약 - KRW / - VND";
-  let updatedText = "잭팟 서버에 연결할 수 없습니다";
-
-  // Query 1: 최고 당첨금 + 당첨자 수 (클라이언트 카운트)
-  try {
-    const highSnap = await getDocs(
-      query(collection(db, "jackpot_rounds"), orderBy("finalWinSort", "desc"), limit(5))
-    );
-    if (!highSnap.empty) {
-      const wei = highSnap.docs[0].data().finalWinWei || "0";
-      highestWinText = formatHexForUi(Number(BigInt(wei)) / 1e18);
-      winnerCountText = formatCount(highSnap.size);
-    }
-  } catch {}
-
-  // Query 2: 최신 라운드 잭팟 표시값
-  try {
-    const latestSnap = await getDocs(
-      query(collection(db, "jackpot_rounds"), orderBy("createdAt", "desc"), limit(1))
-    );
-    if (!latestSnap.empty) {
-      const wei = latestSnap.docs[0].data().jackpotDisplayWei || "0";
-      const hexVal = Number(BigInt(wei)) / 1e18;
-      if (hexVal > 0) {
-        valueText = formatHexForUi(hexVal);
-        fiatText = formatFiatLine(hexVal);
-        updatedText = "최근 결제 기준 (실시간 아님)";
-      }
-    }
-  } catch {}
-
-  setJackpotUi({ valueText, fiatText, updatedText, winnerCountText, highestWinText });
 }
 
 function initJackpotTicker() {
@@ -199,34 +201,20 @@ async function loadJackpotWinners() {
   if (!wrap) return;
 
   try {
-    // 가맹점 이름 맵
-    const merchantSnap = await fetchMerchantsOnce();
-    const merchantMap = new Map();
-    merchantSnap.forEach((d) => {
-      const m = d.data() || {};
-      merchantMap.set(String(d.id), m.name || `가맹점 #${d.id}`);
-    });
-
-    // 최근 당첨 라운드 조회 (isWinner==true, 최신순)
+    // 온체인 당첨 기록 조회 (Firestore: jackpot_winners 컬렉션)
     let snap;
     try {
       snap = await getDocs(
         query(
-          collection(db, "jackpot_rounds"),
-          where("isWinner", "==", true),
-          orderBy("createdAt", "desc"),
+          collection(db, "jackpot_winners"),
+          orderBy("timestamp", "desc"),
           limit(50)
         )
       );
-    } catch {
-      // 복합 인덱스 없을 경우 finalWinSort 내림차순으로 폴백
-      snap = await getDocs(
-        query(
-          collection(db, "jackpot_rounds"),
-          orderBy("finalWinSort", "desc"),
-          limit(20)
-        )
-      );
+    } catch (e) {
+      console.warn("jackpot_winners query failed:", e.message);
+      wrap.innerHTML = '<p class="jp-winners-empty">아직 당첨자가 없습니다.</p>';
+      return;
     }
 
     const winners = [];

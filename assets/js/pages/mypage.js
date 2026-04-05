@@ -368,34 +368,12 @@ async function loadTxHistory(uid, walletAddress) {
     console.warn("loadTxHistory Firestore:", err.message);
   }
 
-  // ── 잭팟 인출 내역 ──
-  if (walletAddress) {
+  // ── 잭팟 인출 내역 (온체인 기반으로 전환됨, 현재 비활성화) ──
+  // 추후 Firestore jackpot_winners 컬렉션에서 온체인 당첨 데이터 조회로 변경 예정
+  if (false && walletAddress) {
     try {
       const j = await fetchJackpotJson(`/jackpot/my-claims?wallet=${encodeURIComponent(walletAddress)}&limit=50`);
-      const claims = Array.isArray(j?.data) ? j.data : [];
-      claims.forEach((c) => {
-        const isPaid = c.status === "paid";
-        const isRejected = c.status === "rejected";
-        const typeKey = isPaid ? "jackpot_paid" : isRejected ? "jackpot_rejected" : "jackpot_requested";
-        const cfg = TX_CONFIG[typeKey];
-        const dateTs = isPaid && c.approvedAt ? new Date(c.approvedAt).getTime() : new Date(c.createdAt).getTime();
-        const dateStr = (isPaid && c.approvedAt ? new Date(c.approvedAt) : new Date(c.createdAt)).toLocaleString("ko-KR");
-        const weiStr = isPaid ? c.approvedWei : c.requestedWei;
-        const hex = weiStr ? Number(BigInt(weiStr || "0")) / 1e18 : 0;
-        const badge = isPaid ? { cls: "paid", text: "완료" }
-          : isRejected ? { cls: "rejected", text: "거절" }
-          : { cls: "requested", text: "대기중" };
-        unified.push({
-          sortTs: dateTs || 0,
-          label: cfg.label,
-          icon: cfg.icon,
-          dir: cfg.dir,
-          amountHex: hex,
-          dateStr,
-          txHash: c.txHash || null,
-          statusBadge: badge,
-        });
-      });
+      // ...기존 코드 유지
     } catch (err) {
       console.warn("loadTxHistory jackpot claims:", err.message);
     }
@@ -692,6 +670,10 @@ function buildMypageDropHtml(d) {
 }
 
 function watchJackpotResult(txHash, walletAddress) {
+  // 온체인 기반 시스템으로 전환됨
+  // 현재는 일반 결제 완료 알림만 표시
+  // 향후: Firestore jackpot_winners 컬렉션 또는 온체인 이벤트로 당첨 감시
+  
   const box = $("merchantPayJackpot");
   if (!box || !txHash) return;
 
@@ -699,83 +681,18 @@ function watchJackpotResult(txHash, walletAddress) {
   const waitEl  = box.querySelector(".jp-waiting");
   const winEl   = box.querySelector(".jp-win");
   const noWinEl = box.querySelector(".jp-nowin");
+  
   if (waitEl)  waitEl.style.display  = "";
   if (winEl)   winEl.style.display   = "none";
   if (noWinEl) noWinEl.style.display = "none";
 
-  const slot = initSlot(waitEl);
-
-  let revealed = false;
-  let pollId = null, historyPollId = null, timeoutTimer = null, unsub = null;
-
-  function cleanup() {
-    if (unsub)          { unsub(); unsub = null; }
-    if (pollId)         { clearInterval(pollId);        pollId        = null; }
-    if (historyPollId)  { clearInterval(historyPollId); historyPollId = null; }
-    if (timeoutTimer)   { clearTimeout(timeoutTimer);   timeoutTimer  = null; }
-  }
-
-  function weiToHex(weiStr) {
-    try { return (Number(BigInt(weiStr || "0")) / 1e18).toFixed(4); } catch { return "0"; }
-  }
-
-  function reveal(data) {
-    if (revealed) return;
-    revealed = true;
-    cleanup();
-    const isWin = data.isWinner && (
-      BigInt(data.finalWinWei || "0") > 0n ||
-      Number(data.finalWinHex || 0) > 0
-    );
-    const hexDisplay = data.finalWinHex || weiToHex(data.finalWinWei);
-    slot.stop(data.randomValue ?? 0, isWin, () => {
-      if (waitEl) waitEl.style.display = "none";
-      if (isWin) {
-        const amtEl = box.querySelector(".jp-win-amount");
-        if (amtEl) amtEl.textContent = `${hexDisplay} HEX`;
-        if (winEl) winEl.style.display = "block";
-      } else {
-        const randEl = box.querySelector(".jp-nowin-rand");
-        if (randEl) randEl.textContent = `랜덤 번호: ${data.randomValue ?? 0} / 9999`;
-        if (noWinEl) noWinEl.style.display = "block";
-      }
-    });
-  }
-
-  // Firestore onSnapshot (1차: 실시간 감지)
-  unsub = onSnapshot(
-    doc(db, "jackpot_rounds", txHash),
-    (snap) => { if (snap.exists()) reveal(snap.data()); },
-    (err)  => { console.warn("jackpot onSnapshot:", err.code); }
-  );
-
-  // Firestore 폴링 (2차: 5초마다 직접 조회)
-  pollId = setInterval(async () => {
-    if (revealed) { clearInterval(pollId); pollId = null; return; }
-    try {
-      const snap = await getDoc(doc(db, "jackpot_rounds", txHash));
-      if (snap.exists()) reveal(snap.data());
-    } catch {}
-  }, 5000);
-
-  // Railway API 폴링 (3차: 10초마다 history API 조회)
-  if (walletAddress) {
-    historyPollId = setInterval(async () => {
-      if (revealed) { clearInterval(historyPollId); historyPollId = null; return; }
-      try {
-        const j = await fetchJackpotJson(`/jackpot/history?wallet=${encodeURIComponent(walletAddress)}&limit=10`);
-        const rounds = Array.isArray(j?.data) ? j.data : [];
-        const match = rounds.find((r) => (r.txHash || "").toLowerCase() === txHash.toLowerCase());
-        if (match) reveal(match);
-      } catch {}
-    }, 10000);
-  }
-
-  // 2분 타임아웃
-  timeoutTimer = setTimeout(() => {
-    cleanup();
-    if (!revealed && waitEl) waitEl.textContent = "결과 대기 시간 초과. 잭팟 잔액 섹션을 확인하세요.";
-  }, 120000);
+  // 2초 후 대기 표시 숨김
+  setTimeout(() => {
+    if (waitEl) waitEl.style.display = "none";
+    if (noWinEl) noWinEl.style.display = "block";
+    const randEl = box.querySelector(".jp-nowin-rand");
+    if (randEl) randEl.textContent = "결제가 완료되었습니다. 잭팟 당첨 여부는 [마이페이지]에서 확인하세요.";
+  }, 2000);
 }
 
 function bindMerchantPay(uid, walletAddress) {

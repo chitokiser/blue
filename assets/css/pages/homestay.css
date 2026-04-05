@@ -1,5 +1,18 @@
 /* /assets/css/pages/homestay.css */
 
+/* 카테고리 필터 */
+.category-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.select--small {
+  min-width: 120px;
+  font-size: 0.85rem;
+}
+
 /* 객실 사진관 */
 .room-panel{
   padding: 14px;

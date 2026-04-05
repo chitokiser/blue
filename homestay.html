@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/assets/images/jump/favicon.png">
-  <title>홈스테이 - 우리마을 오션파크</title>
+  <title>에코숙박</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
   <link rel="stylesheet" href="/assets/css/header.css" />
@@ -23,8 +23,8 @@
     <section class="hero">
       <div class="hero-inner">
         <div class="hero-top">
-          <h1 class="hero-title">우리마을 홈스테이</h1>
-          <p class="hero-desc">오션파크 1·2·3 중심의 체류형 홈스테이를 모아봅니다.</p>
+          <h1 class="hero-title">에코 숙박</h1>
+          <p class="hero-desc">에코 숙박을 통해 탄소중립실천을 실현해보세요</p>
         </div>
 
         <div class="hero-actions">
@@ -73,6 +73,36 @@
         <h2 class="section-title">공개 홈스테이</h2>
         <div class="section-tools">
           <input id="qSearch" class="input" placeholder="집이름/오션파크1·2·3/회원 검색" />
+
+          <!-- 카테고리 필터 -->
+          <div class="category-filters">
+            <select id="qCountry" class="select select--small">
+              <option value="">국가 전체</option>
+              <option value="korea">🇰🇷 한국</option>
+              <option value="vietnam">🇻🇳 베트남</option>
+              <option value="other">🌍 기타</option>
+            </select>
+
+            <select id="qRegion" class="select select--small">
+              <option value="">지역 전체</option>
+              <option value="oceanpark1">오션파크1</option>
+              <option value="oceanpark2">오션파크2</option>
+              <option value="oceanpark3">오션파크3</option>
+              <option value="other">기타 지역</option>
+            </select>
+
+            <select id="qType" class="select select--small">
+              <option value="">숙박종류 전체</option>
+              <option value="homestay">🏠 홈스테이</option>
+              <option value="hotel">🏨 호텔</option>
+              <option value="motel">🏩 모텔</option>
+              <option value="guesthouse">🏘 게스트하우스</option>
+              <option value="resort">🏖 리조트</option>
+              <option value="villa">🏡 빌라</option>
+              <option value="other">🏘 기타</option>
+            </select>
+          </div>
+
           <select id="qSort" class="select">
             <option value="recent">최신</option>
             <option value="rating">평점 높은 순</option>

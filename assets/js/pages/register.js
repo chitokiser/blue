@@ -2,7 +2,7 @@
 // 회원가입: 기본 정보 저장 + 수탁 지갑 생성 + 온체인 등록
 
 import { watchAuth, login } from "../auth.js";
-import { db, functions } from "/assets/js/firebase-init.js";
+import { auth, db, functions } from "/assets/js/firebase-init.js";
 
 import {
   doc,
@@ -146,16 +146,24 @@ async function doRegister(uid, email) {
 
   // ── 1단계: Firestore 저장 ──
   setStep("step1", "doing");
-  await setDoc(doc(db, "users", uid), {
-    name,
-    phone,
-    email: email || "",
-    mentorAddressInput: mentorAddress,
-    agreeTerms:  true,
-    agreeWallet: true,
-    registeredAt: serverTimestamp(),
-    updatedAt:    serverTimestamp(),
-  }, { merge: true });
+  // 토큰 강제 갱신 후 저장 (onAuthStateChanged 직후 토큰 전파 지연 방지)
+  try {
+    await auth.currentUser?.getIdToken(true);
+  } catch (_) { /* 갱신 실패해도 계속 진행 */ }
+  try {
+    await setDoc(doc(db, "users", uid), {
+      name,
+      phone,
+      email: email || "",
+      mentorAddressInput: mentorAddress,
+      agreeTerms:  true,
+      agreeWallet: true,
+      registeredAt: serverTimestamp(),
+      updatedAt:    serverTimestamp(),
+    }, { merge: true });
+  } catch (e) {
+    throw new Error(`[1단계 저장 실패] ${e.message}`);
+  }
   setStep("step1", "done");
 
   // ── 2단계: 수탁 지갑 생성 + 온체인 등록 (createWallet이 두 작업을 모두 처리) ──
@@ -163,8 +171,12 @@ async function doRegister(uid, email) {
   setStep("step3", "doing");
   let walletAddress = null;
   const createWallet = httpsCallable(functions, "createWallet");
-  const walletResult = await createWallet({ mentorAddress });
-  walletAddress = walletResult.data?.address;
+  try {
+    const walletResult = await createWallet({ mentorAddress });
+    walletAddress = walletResult.data?.address;
+  } catch (e) {
+    throw new Error(`[2단계 지갑생성 실패] ${e.message}`);
+  }
   setStep("step2", "done");
   setStep("step3", "done");
 

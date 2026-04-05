@@ -1,23 +1,11 @@
 // /assets/js/firebase-config.js
 
-
 export const firebaseConfig = {
-  apiKey: "AIzaSyD6oGXWcQIAa46ZiO6E9fBWOXqiNCAL4-c",
-  authDomain: "jumper-b15aa.firebaseapp.com",
-  projectId: "jumper-b15aa",
-  storageBucket: "jumper-b15aa.firebasestorage.app",
-  messagingSenderId: "1051842479371",
-  appId: "1:1051842479371:web:cd0dca2c1eab0e44b58e0e",
-  measurementId: "G-0EGPWQ3JP0"
+  apiKey: "AIzaSyAGRY9I-vv4_X4P5hWmVXsnJx2JXGiju6Y",
+  authDomain: "blueecodao.firebaseapp.com",
+  projectId: "blueecodao",
+  storageBucket: "blueecodao.firebasestorage.app",
+  messagingSenderId: "283482172666",
+  appId: "1:283482172666:web:e464ddf335b361a5e2ad43",
+  measurementId: "G-FDYMEQBBPS"
 };
-
-/*  jump firebaseConfig.js
-export const firebaseConfig = {
-apiKey: "AIzaSyBETZfUgG4y0YAiYuxSVhwnhpwzVUQ59EI",
-authDomain: "experience-factory-4e167.firebaseapp.com",
-projectId: "experience-factory-4e167",
-storageBucket: "experience-factory-4e167.firebasestorage.app",
-messagingSenderId: "142042867302",
-appId: "1:142042867302:web:7689eca32aaee5d189efa7",
-};
-*/
