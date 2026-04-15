@@ -24,12 +24,12 @@ function tweakLabels() {
 
   const titleInput = document.getElementById("pTitle");
   if (titleInput && titleInput.getAttribute("placeholder") === "예: 다낭 야경 투어") {
-    titleInput.setAttribute("placeholder", "예: 오션파크3 101동 스튜디오");
+    titleInput.setAttribute("placeholder", "예: 그린3 101동 스튜디오");
   }
 
   const regionInput = document.getElementById("pRegion");
   if (regionInput && regionInput.getAttribute("placeholder") === "예: 다낭 / 호이안") {
-    regionInput.setAttribute("placeholder", "예: 오션파크1 / 오션파크2 / 오션파크3");
+    regionInput.setAttribute("placeholder", "예: 그린1 / 그린2 / 그린3");
   }
 }
 

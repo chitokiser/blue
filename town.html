@@ -21,7 +21,7 @@
     <section class="panel">
       <h1 class="title">우리마을 상세 페이지 (준비중)</h1>
       <p class="desc">
-        오션파크 1/2/3별로
+        그린 1/2/3별로
         생활편의, 이동, 추천 가맹점, 커뮤니티 거점, 홈스테이/놀거리 목록을 모아서 보여주는 페이지입니다.
       </p>
       <div class="state" id="areaState"></div>
@@ -40,7 +40,7 @@
     (function(){
       const p = new URLSearchParams(location.search);
       const area = (p.get('area') || '').toLowerCase();
-      const map = { op1: '오션파크 1', op2: '오션파크 2', op3: '오션파크 3' };
+      const map = { op1: '그린 1', op2: '그린 2', op3: '그린 3' };
       const name = map[area] || '우리마을';
       const el = document.getElementById('areaState');
       if(el) el.textContent = `선택: ${name}`;

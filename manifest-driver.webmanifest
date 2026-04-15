@@ -1,7 +1,7 @@
 {
   "name": "버기카 기사앱",
   "short_name": "기사앱",
-  "description": "오션파크 버기카 기사 전용 앱",
+  "description": "그린 버기카 기사 전용 앱",
   "start_url": "/buggy-driver.html",
   "scope": "/",
   "display": "standalone",

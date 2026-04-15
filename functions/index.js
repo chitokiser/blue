@@ -1350,7 +1350,7 @@ exports.confirmVoucher = onCall(wrapError(async (req) => {
 }));
 
 // ════════════════════════════════════════════════════════════════════════════
-// 버기카 호출 서비스 (오션파크)
+// 버기카 호출 서비스 (그린)
 // ════════════════════════════════════════════════════════════════════════════
 // requestRide: HEX 잔액 온체인 조회 필요 (adminKeySecret → getProvider 내부)
 exports.buggyRequestRide = onCall(

@@ -527,11 +527,11 @@ function applyFilters() {
     // 지역 필터
     if (regionFilter) {
       const merchantRegion = String(m.region || "").toLowerCase();
-      if (regionFilter === "oceanpark1" && !merchantRegion.includes("오션파크1") && !merchantRegion.includes("oceanpark1")) return false;
-      if (regionFilter === "oceanpark2" && !merchantRegion.includes("오션파크2") && !merchantRegion.includes("oceanpark2")) return false;
-      if (regionFilter === "oceanpark3" && !merchantRegion.includes("오션파크3") && !merchantRegion.includes("oceanpark3")) return false;
+      if (regionFilter === "oceanpark1" && !merchantRegion.includes("그린1") && !merchantRegion.includes("oceanpark1")) return false;
+      if (regionFilter === "oceanpark2" && !merchantRegion.includes("그린2") && !merchantRegion.includes("oceanpark2")) return false;
+      if (regionFilter === "oceanpark3" && !merchantRegion.includes("그린3") && !merchantRegion.includes("oceanpark3")) return false;
       if (regionFilter === "other") {
-        const hasOceanPark = merchantRegion.includes("오션파크") || merchantRegion.includes("oceanpark");
+        const hasOceanPark = merchantRegion.includes("그린") || merchantRegion.includes("oceanpark");
         if (hasOceanPark) return false;
       }
     }
