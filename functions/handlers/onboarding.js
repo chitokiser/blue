@@ -45,6 +45,30 @@ async function createCustodialWallet(uid, masterSecret, mentorAddress) {
     return { address: snap.data().wallet.address, created: false };
   }
 
+  // 이메일 기반 기존 수탁 지갑 탐색 (다른 배포에서 같은 이메일로 만든 지갑 재활용)
+  const email = snap.data()?.email;
+  if (email) {
+    const dup = await db.collection('users')
+      .where('email', '==', email)
+      .where('wallet.encryptedKey', '!=', null)
+      .limit(1)
+      .get();
+
+    if (!dup.empty) {
+      const sourceDoc  = dup.docs[0];
+      const sourceData = sourceDoc.data().wallet;
+      // 주소만 연결 — private key는 원본 UID가 관리하므로 복사하지 않음
+      await userRef.set({
+        wallet: {
+          address:      sourceData.address,
+          linkedFrom:   sourceDoc.id,
+          linkedAt:     admin.firestore.FieldValue.serverTimestamp(),
+        },
+      }, { merge: true });
+      return { address: sourceData.address, created: false, linked: true };
+    }
+  }
+
   // 새 지갑 생성
   const wallet       = ethers.Wallet.createRandom();
   const encryptedKey = encrypt(wallet.privateKey, masterSecret);

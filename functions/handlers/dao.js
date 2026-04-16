@@ -1,5 +1,5 @@
 // functions/handlers/dao.js
-// JUMP DAO 의결 시스템 – 심의/상정/의결/댓글
+// BUT DAO 의결 시스템 – 심의/상정/의결/댓글
 
 'use strict';
 
@@ -9,7 +9,7 @@ const { getJumpBankContract, getProvider } = require('../wallet/chain');
 
 const db = admin.firestore();
 
-// ── 스테이킹 기준 (JUMP 0 decimals) ──────────────────────────────
+// ── 스테이킹 기준 (BUT 0 decimals) ───────────────────────────────
 const MIN_PROPOSE  = 10_000;    // 심의 등록
 const MIN_COMMENT  = 10_000;    // 댓글
 const MIN_VOTE     = 1;         // 투표
@@ -28,7 +28,7 @@ async function getUserWallet(uid) {
 async function getStaked(walletAddress) {
   const bank = getJumpBankContract(getProvider());
   const info = await bank.user(walletAddress);
-  return Number(info[2]); // depo (staked JUMP, 0 decimals)
+  return Number(info[2]); // depo (staked BUT, 0 decimals)
 }
 
 const ADMIN_EMAILS = ['daguri75@gmail.com'];
@@ -47,7 +47,7 @@ async function requireAdmin(uid) {
 }
 
 // ── 1. 안건 심의 등록 ─────────────────────────────────────────────
-// 조건: JUMP 1만개 이상 스테이킹 + 관리자 최종 승인
+// 조건: BUT 1만개 이상 스테이킹 + 관리자 최종 승인
 async function createProposal(uid, { title, content }) {
   if (!title?.trim()) throw new Error('제목을 입력해주세요');
   if (!content?.trim()) throw new Error('내용을 입력해주세요');
@@ -58,7 +58,7 @@ async function createProposal(uid, { title, content }) {
   const staked = await getStaked(wallet);
 
   if (staked < MIN_PROPOSE) {
-    throw new Error(`JUMP ${MIN_PROPOSE.toLocaleString()}개 이상 스테이킹 필요 (현재: ${staked.toLocaleString()}개)`);
+    throw new Error(`BUT ${MIN_PROPOSE.toLocaleString()}개 이상 스테이킹 필요 (현재: ${staked.toLocaleString()}개)`);
   }
 
   const ref = await db.collection('dao_proposals').add({
@@ -124,12 +124,12 @@ async function adminRejectProposal(uid, { proposalId, reason }) {
 }
 
 // ── 4. 안건 지지 (review → 누적 25만 달성 시 voting 전환) ──────────
-// 조건: JUMP 1개 이상 스테이킹, 중복 지지 불가
+// 조건: BUT 1개 이상 스테이킹, 중복 지지 불가
 async function supportProposal(uid, { proposalId }) {
   const wallet = await getUserWallet(uid);
   const staked = await getStaked(wallet);
 
-  if (staked < 1) throw new Error('JUMP 토큰을 스테이킹해야 지지할 수 있습니다');
+  if (staked < 1) throw new Error('BUT 토큰을 스테이킹해야 지지할 수 있습니다');
 
   const proposalRef = db.collection('dao_proposals').doc(proposalId);
   const supportRef  = proposalRef.collection('supporters').doc(uid);
@@ -171,7 +171,7 @@ async function supportProposal(uid, { proposalId }) {
 }
 
 // ── 5. 투표 ──────────────────────────────────────────────────────
-// 조건: JUMP 1개 이상 스테이킹, 중복 투표 불가
+// 조건: BUT 1개 이상 스테이킹, 중복 투표 불가
 // 의결: 전체 스테이킹 수의 과반(>50%) 찬성 시 통과
 async function voteProposal(uid, { proposalId, vote }) {
   if (!['yes', 'no'].includes(vote)) throw new Error('찬성(yes) 또는 반대(no)만 가능합니다');
@@ -179,7 +179,7 @@ async function voteProposal(uid, { proposalId, vote }) {
   const wallet = await getUserWallet(uid);
   const staked = await getStaked(wallet);
 
-  if (staked < MIN_VOTE) throw new Error('JUMP 토큰 1개 이상 스테이킹 필요합니다');
+  if (staked < MIN_VOTE) throw new Error('BUT 토큰 1개 이상 스테이킹 필요합니다');
 
   const proposalRef = db.collection('dao_proposals').doc(proposalId);
   const voteRef     = proposalRef.collection('votes').doc(uid);
@@ -241,7 +241,7 @@ async function checkVotingResult(proposalRef) {
   }
 }
 
-// ── 6. 안건 수정 (pending_admin 상태, 작성자 또는 관리자만) ──────────
+// ── 6. 안건 수정 (작성자: pending_admin만, 관리자: 모든 상태) ──────────
 async function updateProposal(uid, { proposalId, title, content }) {
   if (!title?.trim()) throw new Error('제목을 입력해주세요');
   if (!content?.trim()) throw new Error('내용을 입력해주세요');
@@ -254,13 +254,18 @@ async function updateProposal(uid, { proposalId, title, content }) {
 
   const d = snap.data();
 
-  // 작성자 또는 관리자만 수정 가능
-  const adminSnap = await db.collection('admins').doc(uid).get();
-  const isAdmin   = adminSnap.exists;
-  if (d.authorUid !== uid && !isAdmin) throw new Error('수정 권한이 없습니다 (작성자 또는 관리자만 가능)');
+  // 관리자 여부: admins 컬렉션 + 이메일 allowlist 모두 체크 (requireAdmin과 동일 기준)
+  let isAdminUser = false;
+  try { await requireAdmin(uid); isAdminUser = true; } catch {}
+
+  if (d.authorUid !== uid && !isAdminUser) {
+    throw new Error('수정 권한이 없습니다 (작성자 또는 관리자만 가능)');
+  }
 
   // 관리자는 모든 상태에서 수정 가능, 일반 작성자는 pending_admin만 가능
-  if (!isAdmin && d.status !== 'pending_admin') throw new Error('승인 대기 상태인 안건만 수정할 수 있습니다');
+  if (!isAdminUser && d.status !== 'pending_admin') {
+    throw new Error('승인 대기 상태인 안건만 수정할 수 있습니다');
+  }
 
   await ref.update({
     title:     title.trim(),
@@ -269,7 +274,7 @@ async function updateProposal(uid, { proposalId, title, content }) {
     updatedBy: uid,
   });
 
-  logger.info('dao.updateProposal', { uid, proposalId, isAdmin });
+  logger.info('dao.updateProposal', { uid, proposalId, isAdmin: isAdminUser });
   return { ok: true };
 }
 
@@ -281,8 +286,9 @@ async function deleteProposal(uid, { proposalId }) {
 
   const d = snap.data();
 
-  const adminSnap = await db.collection('admins').doc(uid).get();
-  const isAdminDel = adminSnap.exists;
+  let isAdminDel = false;
+  try { await requireAdmin(uid); isAdminDel = true; } catch {}
+
   if (d.authorUid !== uid && !isAdminDel) throw new Error('삭제 권한이 없습니다');
 
   // 관리자는 모든 상태에서 삭제 가능, 일반 작성자는 pending_admin만 가능
@@ -294,7 +300,7 @@ async function deleteProposal(uid, { proposalId }) {
 }
 
 // ── 8. 댓글 ──────────────────────────────────────────────────────
-// 조건: JUMP 1만개 이상 스테이킹
+// 조건: BUT 1만개 이상 스테이킹
 async function commentProposal(uid, { proposalId, content }) {
   if (!content?.trim()) throw new Error('댓글 내용을 입력해주세요');
   if (content.trim().length > 500) throw new Error('댓글은 500자 이내로 입력해주세요');
@@ -303,7 +309,7 @@ async function commentProposal(uid, { proposalId, content }) {
   const staked = await getStaked(wallet);
 
   if (staked < MIN_COMMENT) {
-    throw new Error(`JUMP ${MIN_COMMENT.toLocaleString()}개 이상 스테이킹 필요 (현재: ${staked.toLocaleString()}개)`);
+    throw new Error(`BUT ${MIN_COMMENT.toLocaleString()}개 이상 스테이킹 필요 (현재: ${staked.toLocaleString()}개)`);
   }
 
   const proposalSnap = await db.collection('dao_proposals').doc(proposalId).get();

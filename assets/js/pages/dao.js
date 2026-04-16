@@ -1,5 +1,5 @@
 // /assets/js/pages/dao.js
-// JUMP DAO 의결 페이지 프론트엔드
+// BUT DAO 의결 페이지 프론트엔드
 
 import { initializeApp }       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, onAuthStateChanged }
@@ -29,7 +29,8 @@ const fnComment       = httpsCallable(fns, 'daoCommentProposal');
 
 // ── 온체인 스테이킹 조회 ─────────────────────────────────────────
 const OPBNB_RPC     = 'https://opbnb-mainnet-rpc.bnbchain.org';
-const JUMP_BANK     = '0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33'; // butBank
+const BUT_TOKEN     = '0xc159663b769E6c421854E913460b973899B76E42'; // but token
+const BUT_BANK      = '0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33'; // butBank
 const BANK_ABI      = [
   'function user(address who) external view returns (uint256 totalAllow, uint256 totalBuy, uint256 depo, uint256 stakingTime, uint256 lastClaim)',
   'function totalStaked() external view returns (uint256)',
@@ -40,7 +41,7 @@ let _bank     = null;
 function getBank() {
   if (!_bank) {
     _provider = new ethers.JsonRpcProvider(OPBNB_RPC);
-    _bank = new ethers.Contract(JUMP_BANK, BANK_ABI, _provider);
+    _bank = new ethers.Contract(BUT_BANK, BANK_ABI, _provider);
   }
   return _bank;
 }
@@ -95,14 +96,20 @@ onAuthStateChanged(auth, async user => {
       const adminSnap = await getDoc(doc(db, 'admins', user.uid));
       isAdmin = adminSnap.exists();
     } catch { isAdmin = false; }
+    // 이메일 allowlist 체크 — 백엔드 requireAdmin과 동일 기준
+    if (!isAdmin && user.email) {
+      const ADMIN_EMAILS = ['daguri75@gmail.com'];
+      isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+    }
   } else {
     myWallet = null; myStaked = 0; isAdmin = false;
     $('btnCreateProposal').style.display = 'none';
   }
 
-  // staking/admin 정보 로드 후 상세 뷰 재갱신 (스테이킹 수량 반영)
+  // staking/admin 정보 로드 후 상세 뷰 재갱신 (수정 버튼 포함)
   if (currentProposal && $('daoDetailView').classList.contains('open')) {
     renderActions(currentProposal.id, currentProposal);
+    refreshDetailButtons(currentProposal.id, currentProposal);
   }
 
   loadProposals();
@@ -207,7 +214,7 @@ function renderCard(id, data) {
     <div class="dao-card-meta">
       <span>👤 ${shortAddr(data.authorWallet)}</span>
       <span>📅 ${fmtDate(data.createdAt)}</span>
-      ${data.status === 'review'  ? `<span>👍 지지 ${num(data.supportStaked)} JUMP / 250,000</span>` : ''}
+      ${data.status === 'review'  ? `<span>👍 지지 ${num(data.supportStaked)} BUT / 250,000</span>` : ''}
       ${['voting','passed','rejected'].includes(data.status) ? `<span>🗳️ 찬성 ${data.voteYes||0} · 반대 ${data.voteNo||0}</span>` : ''}
     </div>
   `;
@@ -231,7 +238,7 @@ async function openDetail(id, data) {
   $('detailMeta').innerHTML = `
     <span>👤 ${shortAddr(data.authorWallet)}</span>
     <span>📅 ${fmtDate(data.createdAt)}</span>
-    <span>💎 등록 시 스테이킹: ${num(data.authorStaked)} JUMP</span>
+    <span>💎 등록 시 스테이킹: ${num(data.authorStaked)} BUT</span>
   `;
 
   // 지지 현황
@@ -240,7 +247,7 @@ async function openDetail(id, data) {
     supportEl.style.display = '';
     const pct = Math.min(100, ((data.supportStaked || 0) / 250000) * 100);
     $('supportBar').style.width = pct + '%';
-    $('supportYes').textContent  = `${num(data.supportStaked || 0)} JUMP`;
+    $('supportYes').textContent  = `${num(data.supportStaked || 0)} BUT`;
   } else {
     supportEl.style.display = 'none';
   }
@@ -254,13 +261,13 @@ async function openDetail(id, data) {
     const total = yes + no;
     const pct = total > 0 ? Math.round((yes / total) * 100) : 0;
     $('voteBar').style.width     = pct + '%';
-    $('voteYesLabel').textContent = `찬성 ${data.voteYes||0}표 (${num(yes)} JUMP)`;
-    $('voteNoLabel').textContent  = `반대 ${data.voteNo||0}표 (${num(no)} JUMP)`;
+    $('voteYesLabel').textContent = `찬성 ${data.voteYes||0}표 (${num(yes)} BUT)`;
+    $('voteNoLabel').textContent  = `반대 ${data.voteNo||0}표 (${num(no)} BUT)`;
 
     const totalStaked = await getTotalStaked();
     if (totalStaked > 0) {
       const majority = Math.floor(totalStaked / 2);
-      $('voteQuorum').textContent = `과반 기준: ${num(majority)} JUMP (전체 스테이킹 ${num(totalStaked)} JUMP의 50%)`;
+      $('voteQuorum').textContent = `과반 기준: ${num(majority)} BUT (전체 스테이킹 ${num(totalStaked)} BUT의 50%)`;
     }
   } else {
     voteEl.style.display = 'none';
@@ -269,14 +276,27 @@ async function openDetail(id, data) {
   // 액션 버튼
   renderActions(id, data);
 
+  // 수정/삭제 버튼 + 관리자 패널
+  refreshDetailButtons(id, data);
+
+  // 댓글
+  $('commentsSection').style.display = '';
+  loadComments(id);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 수정/삭제 버튼 + 관리자 패널 갱신
+// openDetail 최초 렌더 및 onAuthStateChanged 후 재갱신 시 공통 사용
+function refreshDetailButtons(id, data) {
   // 수정/삭제 버튼
   // - 관리자: 모든 상태에서 가능
   // - 작성자: pending_admin 상태만 가능
   const sameWallet = myWallet && data.authorWallet &&
     data.authorWallet.toLowerCase() === myWallet.toLowerCase();
-  const sameUid = currentUser && data.authorUid === currentUser.uid;
+  const sameUid  = currentUser && data.authorUid === currentUser.uid;
   const isAuthor = currentUser && (sameWallet || sameUid);
-  const canEdit = currentUser && (isAdmin || (isAuthor && data.status === 'pending_admin'));
+  const canEdit  = currentUser && (isAdmin || (isAuthor && data.status === 'pending_admin'));
   const editBtnWrap = $('editBtnWrap');
   if (editBtnWrap) {
     editBtnWrap.style.display = canEdit ? 'flex' : 'none';
@@ -286,7 +306,7 @@ async function openDetail(id, data) {
     }
   }
 
-  // 관리자 패널
+  // 관리자 패널 (승인/반려)
   const adminEl = $('adminActions');
   if (isAdmin && data.status === 'pending_admin') {
     adminEl.style.display = '';
@@ -295,12 +315,6 @@ async function openDetail(id, data) {
   } else {
     adminEl.style.display = 'none';
   }
-
-  // 댓글
-  $('commentsSection').style.display = '';
-  loadComments(id);
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderActions(id, data) {
@@ -323,7 +337,7 @@ function renderActions(id, data) {
     el.appendChild(btn);
     const hint = document.createElement('span');
     hint.className = 'hint';
-    hint.textContent = `내 스테이킹: ${num(myStaked)} JUMP · 지지하면 내 스테이킹 수량이 누적됩니다`;
+    hint.textContent = `내 스테이킹: ${num(myStaked)} BUT · 지지하면 내 스테이킹 수량이 누적됩니다`;
     el.appendChild(hint);
     return;
   }
@@ -339,7 +353,7 @@ function renderActions(id, data) {
     el.appendChild(no);
     const hint = document.createElement('span');
     hint.className = 'hint';
-    hint.textContent = `내 스테이킹: ${num(myStaked)} JUMP (1개 이상 필요) · 중복 투표 불가`;
+    hint.textContent = `내 스테이킹: ${num(myStaked)} BUT (1개 이상 필요) · 중복 투표 불가`;
     el.appendChild(hint);
     return;
   }
@@ -362,7 +376,7 @@ async function doSupport(proposalId) {
   try {
     const result = await fnSupport({ proposalId });
     if (result.data?.promoted) {
-      alert('지지 완료! 25만 JUMP 달성으로 의결 단계로 전환되었습니다 🎉');
+      alert('지지 완료! 25만 BUT 달성으로 의결 단계로 전환되었습니다 🎉');
     } else {
       alert('지지가 완료되었습니다');
     }
@@ -503,7 +517,7 @@ function loadComments(proposalId) {
         <div class="dao-comment-meta">
           <span>${shortAddr(c.wallet)}</span>
           <span>${fmtDate(c.createdAt)}</span>
-          <span>💎 ${num(c.staked)} JUMP</span>
+          <span>💎 ${num(c.staked)} BUT</span>
         </div>
         <div class="dao-comment-body">${escHtml(c.content)}</div>
       `;

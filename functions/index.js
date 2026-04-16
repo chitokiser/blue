@@ -35,6 +35,7 @@ const onboarding             = require('./handlers/onboarding');
 const depositH               = require('./handlers/deposit');
 const txH                    = require('./handlers/transaction');
 const exchangeH              = require('./handlers/exchange');
+const butTokenH              = require('./handlers/butToken');
 const coopH                  = require('./handlers/coop');
 const daoH                   = require('./handlers/dao');
 const zaloH                  = require('./handlers/zalopay');
@@ -616,6 +617,79 @@ exports.claimJumpDividend = onCall(
     const uid = requireAuth(request);
     const result = await exchangeH.claimJumpDividend(uid, walletSecret.value());
     logger.info('claimJumpDividend', { uid, hexAmount: result.hexAmount, txHash: result.txHash });
+    return result;
+  })
+);
+
+// ════════════════════════════════════════════════════════════════════════════
+// BUT 토큰 (수탁 지갑)
+// ════════════════════════════════════════════════════════════════════════════
+
+// BUT 현황 조회 (가격, 잔액, 스테이킹, 배당 등)
+exports.getButStatus = onCall(
+  wrapError(async (request) => {
+    const uid = requireAuth(request);
+    return butTokenH.getButStatus(uid);
+  })
+);
+
+// BUT 매수 (HEX → BUT)
+exports.buyBut = onCall(
+  { secrets: [walletSecret] },
+  wrapError(async (request) => {
+    const uid    = requireAuth(request);
+    const amount = request.data?.amount;
+    if (!amount) throw new HttpsError('invalid-argument', 'amount가 필요합니다');
+    const result = await butTokenH.buyBut(uid, Number(amount), walletSecret.value());
+    logger.info('buyBut', { uid, amount, txHash: result.txHash });
+    return result;
+  })
+);
+
+// BUT 매도 (BUT → HEX)
+exports.sellBut = onCall(
+  { secrets: [walletSecret] },
+  wrapError(async (request) => {
+    const uid    = requireAuth(request);
+    const amount = request.data?.amount;
+    if (!amount) throw new HttpsError('invalid-argument', 'amount가 필요합니다');
+    const result = await butTokenH.sellBut(uid, Number(amount), walletSecret.value());
+    logger.info('sellBut', { uid, amount, txHash: result.txHash });
+    return result;
+  })
+);
+
+// BUT 스테이킹
+exports.stakeBut = onCall(
+  { secrets: [walletSecret] },
+  wrapError(async (request) => {
+    const uid    = requireAuth(request);
+    const amount = request.data?.amount;
+    if (!amount) throw new HttpsError('invalid-argument', 'amount가 필요합니다');
+    const result = await butTokenH.stakeBut(uid, Number(amount), walletSecret.value());
+    logger.info('stakeBut', { uid, amount, txHash: result.txHash });
+    return result;
+  })
+);
+
+// BUT 스테이킹 출금 (락업 해제 후)
+exports.withdrawBut = onCall(
+  { secrets: [walletSecret] },
+  wrapError(async (request) => {
+    const uid = requireAuth(request);
+    const result = await butTokenH.withdrawBut(uid, walletSecret.value());
+    logger.info('withdrawBut', { uid, txHash: result.txHash });
+    return result;
+  })
+);
+
+// BUT 배당 청구
+exports.claimButDividend = onCall(
+  { secrets: [walletSecret] },
+  wrapError(async (request) => {
+    const uid = requireAuth(request);
+    const result = await butTokenH.claimButDividend(uid, walletSecret.value());
+    logger.info('claimButDividend', { uid, pendingWei: result.pendingWei, txHash: result.txHash });
     return result;
   })
 );

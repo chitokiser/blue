@@ -1,0 +1,730 @@
+<!-- /but.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>BUT 토큰 — BlueEco DAO</title>
+  <link rel="stylesheet" href="/assets/css/app.css" />
+  <link rel="stylesheet" href="/assets/css/header.css" />
+  <script src="/assets/js/partials.js" defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    .bk-body { padding: 14px 15px; max-width: 480px; margin: 0 auto; }
+
+    .bk-card {
+      background: #fff; border-radius: 14px;
+      padding: 15px; margin-bottom: 11px;
+      box-shadow: 0 1px 5px rgba(0,0,0,.07);
+    }
+    .bk-card-title {
+      font-size: 0.7rem; font-weight: 700; color: #78716c;
+      text-transform: uppercase; letter-spacing: .05em; margin: 0 0 11px;
+    }
+
+    .bk-act { display: inline-block; font-size: 0.68rem; font-weight: 700;
+      padding: 2px 9px; border-radius: 20px; margin-bottom: 9px; }
+    .act-0 { background:#f3f4f6; color:#6b7280; }
+    .act-1 { background:#dbeafe; color:#1d4ed8; }
+    .act-full { background:#dcfce7; color:#15803d; }
+
+    .bk-price-main { font-size: 1.55rem; font-weight: 900; color: #1c1917; }
+    .bk-price-sub { font-size: 0.78rem; color: #78716c; margin-bottom: 11px; }
+    .bk-stats { display: flex; gap: 7px; flex-wrap: wrap; }
+    .bk-stat {
+      flex: 1; min-width: 88px;
+      background: #fafaf9; border-radius: 8px;
+      padding: 8px 10px; border: 1px solid #e7e5e4;
+    }
+    .bk-stat-label { font-size: 0.66rem; color: #a8a29e; margin-bottom: 2px; }
+    .bk-stat-value { font-size: 0.86rem; font-weight: 700; color: #1c1917; }
+
+    .bk-dash { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .bk-dash-item { background: #fafaf9; border-radius: 8px; padding: 8px 10px; border: 1px solid #e7e5e4; }
+    .bk-dash-lbl { font-size: 0.66rem; color: #a8a29e; margin-bottom: 2px; }
+    .bk-dash-val { font-size: 0.88rem; font-weight: 800; color: #1c1917; }
+    .pos { color: #15803d; } .neg { color: #dc2626; }
+
+    .bk-tabs {
+      display: flex; background: #fff; border-radius: 12px;
+      padding: 4px; margin-bottom: 11px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .bk-tab {
+      flex: 1; background: none; border: none;
+      padding: 9px 4px; font-size: 0.8rem; font-weight: 600;
+      color: #78716c; border-radius: 8px; cursor: pointer;
+    }
+    .bk-tab.active { background: #f59e0b; color: #fff; }
+
+    .bk-field { margin-bottom: 11px; }
+    .bk-lbl { font-size: 0.73rem; color: #78716c; margin-bottom: 4px; display: block; }
+    .bk-iw { position: relative; }
+    .bk-input {
+      width: 100%; padding: 11px 60px 11px 12px;
+      border: 1.5px solid #e7e5e4; border-radius: 9px;
+      font-size: 1rem; font-weight: 700; background: #fafaf9;
+      outline: none; appearance: textfield; -moz-appearance: textfield;
+    }
+    .bk-input::-webkit-outer-spin-button,
+    .bk-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .bk-input:focus { border-color: #f59e0b; background: #fff; }
+    .bk-unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 0.73rem; font-weight: 700; color: #78716c; pointer-events: none; }
+    .bk-max { position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: #fef3c7; border: none; border-radius: 5px;
+      padding: 3px 7px; font-size: 0.68rem; font-weight: 700; color: #b45309; cursor: pointer; }
+
+    .bk-info {
+      background: #fffbeb; border-radius: 8px; padding: 10px 12px;
+      border: 1px solid #fde68a; margin-bottom: 11px;
+    }
+    .bk-info-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.78rem; margin-bottom: 3px;
+    }
+    .bk-info-row:last-child { margin-bottom: 0; }
+    .bk-info-lbl { color: #92400e; }
+    .bk-info-val { font-weight: 700; color: #78350f; }
+
+    .bk-notice {
+      border-radius: 8px; padding: 9px 12px;
+      font-size: 0.78rem; margin-bottom: 11px; border-width: 1px; border-style: solid;
+    }
+    .bk-notice.warn { background:#fffbeb; color:#854d0e; border-color:#fde68a; }
+    .bk-notice.ok   { background:#d1fae5; color:#065f46; border-color:#6ee7b7; }
+    .bk-notice.err  { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+
+    .bk-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
+      font-size: 0.93rem; font-weight: 800; cursor: pointer; transition: opacity .15s;
+    }
+    .bk-btn + .bk-btn { margin-top: 8px; }
+    .bk-btn:disabled { opacity: .45; cursor: default; }
+    .bk-primary { background: #f59e0b; color: #fff; }
+    .bk-primary:hover:not(:disabled) { background: #d97706; }
+    .bk-danger  { background: #ef4444; color: #fff; }
+    .bk-danger:hover:not(:disabled)  { background: #dc2626; }
+    .bk-green   { background: #10b981; color: #fff; }
+    .bk-green:hover:not(:disabled)   { background: #059669; }
+    .bk-ghost   { background: #f3f4f6; color: #374151; }
+    .bk-ghost:hover:not(:disabled)   { background: #e5e7eb; }
+
+    .bk-warn-txt { font-size: 0.74rem; color: #dc2626; min-height: 17px; margin-bottom: 6px; }
+    .bk-spin { text-align: center; padding: 18px; color: #a8a29e; font-size: 0.83rem; }
+
+    .bk-gate {
+      text-align: center; padding: 24px 16px; color: #78716c; font-size: 0.88rem;
+    }
+    .bk-gate .icon { font-size: 2rem; margin-bottom: 8px; }
+
+    .bk-toast {
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(40px);
+      background: #1c1917; color: #fff; border-radius: 10px;
+      padding: 9px 18px; font-size: 0.83rem; font-weight: 600;
+      opacity: 0; transition: opacity .2s, transform .2s;
+      pointer-events: none; z-index: 999;
+      max-width: calc(100vw - 32px); text-align: center; white-space: pre-line;
+    }
+    .bk-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div id="siteHeader"></div>
+
+  <main class="bk-body">
+
+    <!-- 시장 정보 -->
+    <div class="bk-card">
+      <p class="bk-card-title">시장 정보</p>
+      <div id="marketContent"><div class="bk-spin">불러오는 중...</div></div>
+    </div>
+
+    <!-- 내 현황 (로그인 후) -->
+    <div class="bk-card" id="myCard" style="display:none">
+      <p class="bk-card-title">내 현황</p>
+      <div id="myContent"></div>
+    </div>
+
+    <!-- 로그인 안내 (비로그인) -->
+    <div class="bk-card" id="loginGate" style="display:none">
+      <div class="bk-gate">
+        <div class="icon">🔐</div>
+        <p>BUT 토큰 거래는 구글 로그인이 필요합니다.</p>
+        <p style="font-size:0.78rem;color:#a8a29e;margin-top:4px;">헤더의 구글 로그인 버튼을 눌러주세요.</p>
+      </div>
+    </div>
+
+    <!-- 지갑 없음 안내 -->
+    <div class="bk-card" id="noWalletGate" style="display:none">
+      <div class="bk-gate">
+        <div class="icon">💼</div>
+        <p>수탁 지갑이 아직 생성되지 않았습니다.</p>
+        <p style="font-size:0.78rem;color:#a8a29e;margin-top:4px;">회원가입 후 지갑이 자동으로 생성됩니다.</p>
+      </div>
+    </div>
+
+    <!-- 탭 (로그인 + 지갑 있을 때만 표시) -->
+    <div class="bk-tabs" id="bkTabs" style="display:none">
+      <button class="bk-tab active" data-tab="buy">매수</button>
+      <button class="bk-tab" data-tab="sell">매도</button>
+      <button class="bk-tab" data-tab="stake">스테이킹</button>
+      <button class="bk-tab" data-tab="div">배당</button>
+    </div>
+
+    <!-- 매수 패널 -->
+    <div id="panel-buy" class="bk-card" style="display:none">
+      <p class="bk-card-title">BUT 매수</p>
+      <div class="bk-field">
+        <label class="bk-lbl">수량 (BUT 정수)</label>
+        <div class="bk-iw">
+          <input type="number" class="bk-input" id="buyAmount" placeholder="0" min="1" step="1" style="padding-right:52px">
+          <span class="bk-unit">BUT</span>
+        </div>
+      </div>
+      <div class="bk-info">
+        <div class="bk-info-row"><span class="bk-info-lbl">현재가</span><span class="bk-info-val" id="buyPrice">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">예상 HEX 비용</span><span class="bk-info-val" id="buyCost">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">자동 스테이킹</span><span class="bk-info-val" id="buyAutoStake">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">실제 수령 (지갑)</span><span class="bk-info-val" id="buyReceive">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">내 HEX 잔액</span><span class="bk-info-val" id="buyHexBal">-</span></div>
+      </div>
+      <div class="bk-warn-txt" id="buyWarn"></div>
+      <button class="bk-btn bk-primary" id="btnBuy">매수하기</button>
+    </div>
+
+    <!-- 매도 패널 -->
+    <div id="panel-sell" class="bk-card" style="display:none">
+      <p class="bk-card-title">BUT 매도</p>
+      <div class="bk-field">
+        <label class="bk-lbl">수량 (BUT 정수)</label>
+        <div class="bk-iw">
+          <input type="number" class="bk-input" id="sellAmount" placeholder="0" min="1" step="1" style="padding-right:52px">
+          <button class="bk-max" id="btnSellMax">MAX</button>
+        </div>
+      </div>
+      <div class="bk-info">
+        <div class="bk-info-row"><span class="bk-info-lbl">현재가</span><span class="bk-info-val" id="sellPrice">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">매도 수수료</span><span class="bk-info-val" id="sellFee">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">예상 수령 HEX</span><span class="bk-info-val" id="sellRecv">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">내 BUT 잔액</span><span class="bk-info-val" id="sellButBal">-</span></div>
+      </div>
+      <div class="bk-warn-txt" id="sellWarn"></div>
+      <button class="bk-btn bk-danger" id="btnSell">매도하기</button>
+    </div>
+
+    <!-- 스테이킹 패널 -->
+    <div id="panel-stake" class="bk-card" style="display:none">
+      <p class="bk-card-title">스테이킹</p>
+      <div class="bk-notice warn">🔒 잠금기간 <strong>120일</strong> · 배당 주기 <strong>7일</strong></div>
+      <div class="bk-field">
+        <label class="bk-lbl">수량 (BUT 정수)</label>
+        <div class="bk-iw">
+          <input type="number" class="bk-input" id="stakeAmount" placeholder="0" min="1" step="1" style="padding-right:52px">
+          <button class="bk-max" id="btnStakeMax">MAX</button>
+        </div>
+      </div>
+      <div class="bk-info">
+        <div class="bk-info-row"><span class="bk-info-lbl">현재 스테이킹</span><span class="bk-info-val" id="stakeDepo">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">잠금 해제일</span><span class="bk-info-val" id="stakeUnlock">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">내 BUT 잔액</span><span class="bk-info-val" id="stakeButBal">-</span></div>
+      </div>
+      <div class="bk-warn-txt" id="stakeWarn"></div>
+      <button class="bk-btn bk-primary" id="btnStake">스테이킹하기</button>
+      <button class="bk-btn bk-ghost" id="btnWithdraw" style="display:none">📤 스테이킹 전량 출금</button>
+    </div>
+
+    <!-- 배당 패널 -->
+    <div id="panel-div" class="bk-card" style="display:none">
+      <p class="bk-card-title">배당 청구</p>
+      <div class="bk-info">
+        <div class="bk-info-row"><span class="bk-info-lbl">스테이킹 수량</span><span class="bk-info-val" id="divDepo">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">청구 가능 배당</span><span class="bk-info-val" id="divPending">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">다음 청구 가능</span><span class="bk-info-val" id="divNext">-</span></div>
+        <div class="bk-info-row"><span class="bk-info-lbl">누적 수령</span><span class="bk-info-val" id="divTotal">-</span></div>
+      </div>
+      <div class="bk-notice" id="divNotice" style="display:none"></div>
+      <button class="bk-btn bk-green" id="btnClaim">배당 청구</button>
+    </div>
+
+  </main>
+
+  <div id="siteFooter"></div>
+  <div class="bk-toast" id="bkToast"></div>
+
+  <script type="module" src="/assets/js/firebase-init.js"></script>
+  <script type="module">
+import { auth, functions } from '/assets/js/firebase-init.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.min.js';
+
+// ── 상수 ──────────────────────────────────────────────────────────────
+const OPBNB_RPC      = 'https://opbnb-mainnet-rpc.bnbchain.org';
+const BUT_TOKEN      = '0xc159663b769E6c421854E913460b973899B76E42';
+const BUT_BANK       = '0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33';
+const STAKE_LOCK_S   = 120 * 86400;
+const DIV_INTERVAL_S = 7  * 86400;
+
+const BANK_ABI = [
+  'function price() view returns (uint256)',
+  'function totalStaked() view returns (uint256)',
+  'function hexBalance() view returns (uint256)',
+  'function effectiveStaked() view returns (uint256)',
+  'function tokenInventory() view returns (uint256)',
+  'function rate() view returns (uint8)',
+  'function act() view returns (uint8)',
+  'function autoStakeBps() view returns (uint16)',
+];
+
+// ── 읽기 전용 프로바이더 (시장 데이터 — 연결 없이 표시) ──────────────
+const rp    = new ethers.JsonRpcProvider(OPBNB_RPC);
+const rBank = new ethers.Contract(BUT_BANK, BANK_ABI, rp);
+
+// ── Firebase Callable ────────────────────────────────────────────────
+const fnGetStatus     = httpsCallable(functions, 'getButStatus');
+const fnBuy           = httpsCallable(functions, 'buyBut');
+const fnSell          = httpsCallable(functions, 'sellBut');
+const fnStake         = httpsCallable(functions, 'stakeBut');
+const fnWithdraw      = httpsCallable(functions, 'withdrawBut');
+const fnClaimDiv      = httpsCallable(functions, 'claimButDividend');
+
+// ── 상태 ─────────────────────────────────────────────────────────────
+let _user     = null;   // Firebase Auth user
+let _status   = null;   // 서버에서 받은 butStatus
+let _price    = 0n;
+let _rate     = 3;
+let _act      = 0;
+let _autoBps  = 1000;
+let _activeTab = 'buy';
+
+// ── DOM refs ─────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const toastEl = $('bkToast');
+let _toastTimer = null;
+
+// ── 유틸 ─────────────────────────────────────────────────────────────
+function toast(msg, ms = 3200) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+function fmtHex(weiStr, d = 6) {
+  const n = typeof weiStr === 'bigint' ? weiStr : BigInt(weiStr || '0');
+  return (Number(n) / 1e18).toFixed(d);
+}
+const fmtN = n => Number(n).toLocaleString();
+
+function fmtDate(ts) {
+  const n = typeof ts === 'number' ? ts : Number(ts);
+  if (!n) return '-';
+  return new Date(n * 1000).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+function daysLeft(unlockTs) {
+  const diff = Number(unlockTs) - Math.floor(Date.now() / 1000);
+  return diff > 0 ? Math.ceil(diff / 86400) : null;
+}
+
+function hoursLeft(ts) {
+  const diff = Number(ts) - Math.floor(Date.now() / 1000);
+  return diff > 0 ? Math.ceil(diff / 3600) : 0;
+}
+
+function parseErr(err) {
+  const msg = err?.message || '';
+  if (msg.includes('락업')) return msg;
+  if (msg.includes('잔액 부족')) return msg;
+  if (msg.includes('배당')) return msg;
+  if (msg.includes('스테이킹')) return msg;
+  if (msg.includes('지갑')) return msg;
+  if (msg.includes('buy cap'))    return '최대 매수 한도 초과 (effectiveStaked의 10%)';
+  if (msg.includes('slippage'))   return '가격 변동 초과 — 다시 시도해주세요';
+  if (msg.includes('sold out'))   return '재고 부족';
+  if (msg.includes('hex low'))    return 'HEX 유동성 부족';
+  if (msg.includes('locked'))     return '스테이킹 잠금 기간입니다 (120일)';
+  if (msg.includes('not time'))   return '배당 청구 대기 중 (7일 주기)';
+  if (msg.includes('zero'))       return '청구 가능한 배당이 없습니다';
+  return msg.slice(0, 100) || '오류 발생';
+}
+
+function setLoading(btn, isLoading, defaultText) {
+  btn.disabled    = isLoading;
+  btn.textContent = isLoading ? '처리 중...' : defaultText;
+}
+
+// ── 탭 ───────────────────────────────────────────────────────────────
+const PANELS = ['buy', 'sell', 'stake', 'div'];
+$('bkTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.bk-tab');
+  if (!tab) return;
+  document.querySelectorAll('.bk-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  _activeTab = tab.dataset.tab;
+  PANELS.forEach(p => $(`panel-${p}`).style.display = p === _activeTab ? '' : 'none');
+});
+
+// ── 인증 감지 ─────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  _user = user;
+  if (!user) {
+    showGate('login');
+  } else {
+    showGate('none');
+    await loadStatus();
+  }
+});
+
+function showGate(type) {
+  $('loginGate').style.display   = type === 'login'   ? '' : 'none';
+  $('noWalletGate').style.display = type === 'noWallet' ? '' : 'none';
+
+  const hasUser = type === 'none';
+  $('myCard').style.display = hasUser ? '' : 'none';
+  $('bkTabs').style.display = hasUser ? '' : 'none';
+  PANELS.forEach(p => {
+    $(`panel-${p}`).style.display = (hasUser && p === _activeTab) ? '' : 'none';
+  });
+}
+
+// ── 데이터 로드 ───────────────────────────────────────────────────────
+async function loadMarket() {
+  try {
+    const [priceBn, totalSt, hexBal, inv, rateBn, actBn, autoBps, effSt] = await Promise.all([
+      rBank.price(), rBank.totalStaked(), rBank.hexBalance(),
+      rBank.tokenInventory(), rBank.rate(), rBank.act(),
+      rBank.autoStakeBps(), rBank.effectiveStaked(),
+    ]);
+
+    _price   = priceBn;
+    _rate    = Number(rateBn);
+    _act     = Number(actBn);
+    _autoBps = Number(autoBps);
+
+    const canBuy   = (_act & 1) !== 0;
+    const canSell  = (_act & 2) !== 0;
+    const canDiv   = (_act & 16) !== 0;
+    const actLabel = canBuy && canSell ? '전체 활성' : canBuy ? '매수 가능' : '거래 중지';
+    const actCls   = canBuy && canSell ? 'act-full' : canBuy ? 'act-1' : 'act-0';
+
+    $('marketContent').innerHTML = `
+      <div style="margin-bottom:8px">
+        <span class="bk-act ${actCls}">${actLabel}</span>
+      </div>
+      <div class="bk-price-main">${fmtHex(priceBn)} HEX</div>
+      <div class="bk-price-sub">BUT 1개 현재 가격</div>
+      <div class="bk-stats">
+        <div class="bk-stat">
+          <div class="bk-stat-label">전체 스테이킹</div>
+          <div class="bk-stat-value">${fmtN(totalSt)} BUT</div>
+        </div>
+        <div class="bk-stat">
+          <div class="bk-stat-label">풀 HEX 잔액</div>
+          <div class="bk-stat-value">${fmtHex(hexBal, 4)} HEX</div>
+        </div>
+        <div class="bk-stat">
+          <div class="bk-stat-label">재고</div>
+          <div class="bk-stat-value">${fmtN(inv)} BUT</div>
+        </div>
+        <div class="bk-stat">
+          <div class="bk-stat-label">매도 수수료</div>
+          <div class="bk-stat-value">${_rate}%</div>
+        </div>
+      </div>`;
+
+    $('buyPrice').textContent  = `${fmtHex(priceBn)} HEX`;
+    $('sellPrice').textContent = `${fmtHex(priceBn)} HEX`;
+    $('sellFee').textContent   = `${_rate}%`;
+    calcBuy(); calcSell();
+  } catch (err) {
+    $('marketContent').innerHTML = `<div class="bk-spin">로드 실패: ${err.message}</div>`;
+  }
+}
+
+async function loadStatus() {
+  if (!_user) return;
+  try {
+    const res = await fnGetStatus({});
+    _status = res.data;
+
+    if (!_status.user) {
+      showGate('noWallet');
+      return;
+    }
+
+    showGate('none');
+    renderUser(_status);
+  } catch (err) {
+    toast('현황 로드 실패: ' + parseErr(err));
+  }
+}
+
+function renderUser(st) {
+  const u = st.user;
+  if (!u) return;
+
+  const pnlWei = BigInt(u.myPnlWei);
+  const pnlHex = Number(pnlWei) / 1e18;
+  const roiBps = Number(u.myRoiBps);
+  const pnlCls = pnlHex >= 0 ? 'pos' : 'neg';
+  const sign   = pnlHex >= 0 ? '+' : '';
+
+  $('myContent').innerHTML = `
+    <div class="bk-dash">
+      <div class="bk-dash-item">
+        <div class="bk-dash-lbl">HEX 잔액</div>
+        <div class="bk-dash-val">${fmtHex(u.hexBalance, 4)}</div>
+      </div>
+      <div class="bk-dash-item">
+        <div class="bk-dash-lbl">BUT 잔액</div>
+        <div class="bk-dash-val">${fmtN(u.butBalance)}</div>
+      </div>
+      <div class="bk-dash-item">
+        <div class="bk-dash-lbl">스테이킹</div>
+        <div class="bk-dash-val">${fmtN(u.depo)} BUT</div>
+      </div>
+      <div class="bk-dash-item">
+        <div class="bk-dash-lbl">평균 매수가</div>
+        <div class="bk-dash-val">${BigInt(u.myAvgBuy) > 0n ? fmtHex(u.myAvgBuy) + ' HEX' : '-'}</div>
+      </div>
+      <div class="bk-dash-item">
+        <div class="bk-dash-lbl">손익 (PnL)</div>
+        <div class="bk-dash-val ${pnlCls}">${sign}${pnlHex.toFixed(4)} HEX</div>
+      </div>
+      <div class="bk-dash-item">
+        <div class="bk-dash-lbl">수익률 (ROI)</div>
+        <div class="bk-dash-val ${pnlCls}">${sign}${(roiBps / 100).toFixed(2)}%</div>
+      </div>
+    </div>`;
+
+  // 매수 패널
+  $('buyHexBal').textContent = `${fmtHex(u.hexBalance, 4)} HEX`;
+  calcBuy();
+
+  // 매도 패널
+  $('sellButBal').textContent = `${fmtN(u.butBalance)} BUT`;
+  calcSell();
+
+  // 스테이킹 패널
+  $('stakeButBal').textContent = `${fmtN(u.butBalance)} BUT`;
+  $('stakeDepo').textContent   = `${fmtN(u.depo)} BUT`;
+
+  if (BigInt(u.depo) > 0n) {
+    const unlockTs = Number(u.stakingTime) + STAKE_LOCK_S;
+    const dl = daysLeft(unlockTs);
+    if (dl === null) {
+      $('stakeUnlock').textContent = '잠금 해제됨 ✅';
+      $('btnWithdraw').style.display = '';
+    } else {
+      $('stakeUnlock').textContent = `${fmtDate(unlockTs)} (${dl}일 남음)`;
+      $('btnWithdraw').style.display = 'none';
+    }
+  } else {
+    $('stakeUnlock').textContent = '-';
+    $('btnWithdraw').style.display = 'none';
+  }
+
+  // 배당 패널
+  const pendDiv = BigInt(u.pendingDiv || '0');
+  const depo    = BigInt(u.depo || '0');
+  $('divDepo').textContent    = `${fmtN(u.depo)} BUT`;
+  $('divPending').textContent = `${fmtHex(u.pendingDiv, 6)} HEX`;
+  $('divTotal').textContent   = `${fmtHex(u.totalAllow, 4)} HEX`;
+
+  const notice = $('divNotice');
+  const btnClaim = $('btnClaim');
+
+  if (depo === 0n) {
+    $('divNext').textContent = '-';
+    notice.style.display = '';
+    notice.className = 'bk-notice err';
+    notice.textContent = '스테이킹이 없으면 배당을 받을 수 없습니다';
+    btnClaim.disabled = true;
+    return;
+  }
+
+  const nowS = Math.floor(Date.now() / 1000);
+  const nextClaim = Number(u.lastClaim) + DIV_INTERVAL_S;
+  if (nowS < nextClaim) {
+    $('divNext').textContent = `${fmtDate(nextClaim)} (${hoursLeft(nextClaim)}시간 남음)`;
+    notice.style.display = '';
+    notice.className = 'bk-notice warn';
+    notice.textContent = '아직 청구 대기 기간입니다 (7일 주기)';
+    btnClaim.disabled = true;
+  } else {
+    $('divNext').textContent = '지금 청구 가능 ✅';
+    notice.style.display = '';
+    notice.className = `bk-notice ${pendDiv > 0n ? 'ok' : 'warn'}`;
+    notice.textContent = pendDiv > 0n
+      ? `청구 가능: ${fmtHex(u.pendingDiv, 6)} HEX`
+      : '현재 청구 가능한 배당이 없습니다';
+    btnClaim.disabled = pendDiv === 0n;
+  }
+}
+
+// ── 계산 ─────────────────────────────────────────────────────────────
+function calcBuy() {
+  const amt = parseInt($('buyAmount').value) || 0;
+  if (amt < 1 || _price === 0n) {
+    $('buyCost').textContent     = '-';
+    $('buyAutoStake').textContent = `${_autoBps / 100}%`;
+    $('buyReceive').textContent   = '-';
+    return;
+  }
+  const cost    = BigInt(amt) * _price;
+  const autoAmt = Math.floor(amt * _autoBps / 10000);
+  const recv    = amt - autoAmt;
+  $('buyCost').textContent     = `${fmtHex(cost, 6)} HEX`;
+  $('buyAutoStake').textContent = `${autoAmt} BUT (${_autoBps / 100}%)`;
+  $('buyReceive').textContent   = `${recv} BUT`;
+}
+
+function calcSell() {
+  const amt = parseInt($('sellAmount').value) || 0;
+  if (amt < 1 || _price === 0n) { $('sellRecv').textContent = '-'; return; }
+  const gross = BigInt(amt) * _price;
+  const fee   = gross * BigInt(_rate) / 100n;
+  $('sellRecv').textContent = `${fmtHex(gross - fee, 6)} HEX`;
+}
+
+$('buyAmount').addEventListener('input', calcBuy);
+$('sellAmount').addEventListener('input', calcSell);
+
+$('btnSellMax').addEventListener('click', () => {
+  if (_status?.user) {
+    $('sellAmount').value = _status.user.butBalance;
+    calcSell();
+  }
+});
+$('btnStakeMax').addEventListener('click', () => {
+  if (_status?.user) $('stakeAmount').value = _status.user.butBalance;
+});
+
+// ── 매수 ─────────────────────────────────────────────────────────────
+$('btnBuy').addEventListener('click', async () => {
+  if (!_user) { toast('로그인이 필요합니다'); return; }
+  if (!(_act & 1)) { toast('현재 매수가 비활성화되어 있습니다'); return; }
+
+  const amt = parseInt($('buyAmount').value);
+  if (!amt || amt < 1) { $('buyWarn').textContent = '1 이상 입력해주세요'; return; }
+
+  const btn = $('btnBuy');
+  setLoading(btn, true, '매수하기');
+  $('buyWarn').textContent = '';
+
+  try {
+    const res = await fnBuy({ amount: amt });
+    const autoAmt = Math.floor(amt * _autoBps / 10000);
+    toast(`✅ ${amt} BUT 매수 완료!\n자동 스테이킹 ${autoAmt} BUT\nTx: ${res.data.txHash?.slice(0, 12)}...`);
+    $('buyAmount').value = '';
+    calcBuy();
+    await loadStatus();
+    await loadMarket();
+  } catch (err) {
+    $('buyWarn').textContent = parseErr(err);
+  } finally {
+    setLoading(btn, false, '매수하기');
+  }
+});
+
+// ── 매도 ─────────────────────────────────────────────────────────────
+$('btnSell').addEventListener('click', async () => {
+  if (!_user) { toast('로그인이 필요합니다'); return; }
+  if (!(_act & 2)) { toast('현재 매도가 비활성화되어 있습니다'); return; }
+
+  const amt = parseInt($('sellAmount').value);
+  if (!amt || amt < 1) { $('sellWarn').textContent = '1 이상 입력해주세요'; return; }
+  if (!confirm(`${amt} BUT를 매도하시겠습니까?\n수수료 ${_rate}%가 차감됩니다.`)) return;
+
+  const btn = $('btnSell');
+  setLoading(btn, true, '매도하기');
+  $('sellWarn').textContent = '';
+
+  try {
+    const res = await fnSell({ amount: amt });
+    const gross = BigInt(amt) * _price;
+    const recv  = gross - gross * BigInt(_rate) / 100n;
+    toast(`✅ ${amt} BUT 매도 완료!\n수령: ${fmtHex(recv, 4)} HEX\nTx: ${res.data.txHash?.slice(0, 12)}...`);
+    $('sellAmount').value = '';
+    calcSell();
+    await loadStatus();
+    await loadMarket();
+  } catch (err) {
+    $('sellWarn').textContent = parseErr(err);
+  } finally {
+    setLoading(btn, false, '매도하기');
+  }
+});
+
+// ── 스테이킹 ─────────────────────────────────────────────────────────
+$('btnStake').addEventListener('click', async () => {
+  if (!_user) { toast('로그인이 필요합니다'); return; }
+
+  const amt = parseInt($('stakeAmount').value);
+  if (!amt || amt < 1) { $('stakeWarn').textContent = '1 이상 입력해주세요'; return; }
+
+  const btn = $('btnStake');
+  setLoading(btn, true, '스테이킹하기');
+  $('stakeWarn').textContent = '';
+
+  try {
+    const res = await fnStake({ amount: amt });
+    toast(`✅ ${amt} BUT 스테이킹 완료!\n🔒 120일 잠금\nTx: ${res.data.txHash?.slice(0, 12)}...`);
+    $('stakeAmount').value = '';
+    await loadStatus();
+    await loadMarket();
+  } catch (err) {
+    $('stakeWarn').textContent = parseErr(err);
+  } finally {
+    setLoading(btn, false, '스테이킹하기');
+  }
+});
+
+// ── 출금 ─────────────────────────────────────────────────────────────
+$('btnWithdraw').addEventListener('click', async () => {
+  if (!_user) { toast('로그인이 필요합니다'); return; }
+  if (!confirm('스테이킹 전량을 출금하시겠습니까?')) return;
+
+  const btn = $('btnWithdraw');
+  setLoading(btn, true, '📤 스테이킹 전량 출금');
+
+  try {
+    const res = await fnWithdraw({});
+    toast(`✅ 스테이킹 출금 완료!\nTx: ${res.data.txHash?.slice(0, 12)}...`);
+    await loadStatus();
+    await loadMarket();
+  } catch (err) {
+    toast(parseErr(err));
+  } finally {
+    setLoading(btn, false, '📤 스테이킹 전량 출금');
+  }
+});
+
+// ── 배당 청구 ─────────────────────────────────────────────────────────
+$('btnClaim').addEventListener('click', async () => {
+  if (!_user) { toast('로그인이 필요합니다'); return; }
+
+  const btn = $('btnClaim');
+  setLoading(btn, true, '배당 청구');
+
+  try {
+    const res = await fnClaimDiv({});
+    const pendWei = res.data.pendingWei || '0';
+    toast(`✅ 배당 청구 완료! 🎉\n수령: ${fmtHex(pendWei, 6)} HEX\nTx: ${res.data.txHash?.slice(0, 12)}...`);
+    await loadStatus();
+    await loadMarket();
+  } catch (err) {
+    toast(parseErr(err));
+  } finally {
+    setLoading(btn, false, '배당 청구');
+  }
+});
+
+// ── 초기 로드 ─────────────────────────────────────────────────────────
+loadMarket();
+  </script>
+</body>
+</html>

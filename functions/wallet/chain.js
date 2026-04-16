@@ -12,7 +12,8 @@ const RPC_URL = process.env.OPBNB_RPC || 'https://opbnb-mainnet-rpc.bnbchain.org
 
 const ADDRESSES = {
   butToken:    '0xc159663b769E6c421854E913460b973899B76E42',  // BUT 토큰 (0 decimals)
-  butBank:     '0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33',  // butBank (세금 수신)
+  hexToken:    '0x41F2Ea9F4eF7c4E35ba1a8438fC80937eD4E5464',  // HEX 결제 토큰 (18 decimals)
+  butBank:     '0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33',  // butBank
   butTreasury: '0x47fac604B1E699E7fbE470598EF69024e8a43b7f',  // Treasury
   butPlatform: '0x93ded35508F56BA53C5653Eca736aDdfD994AFcd',  // 메인 플랫폼 컨트랙트
   jumpPlatform: '0x93ded35508F56BA53C5653Eca736aDdfD994AFcd',  // 레거시 alias
@@ -111,18 +112,44 @@ const BUT_TOKEN_ABI = [
   'event Approval(address indexed owner, address indexed spender, uint256 value)',
 ];
 
+// HEX 결제 토큰 ABI (ERC20, 18 decimals) — butBank의 결제 수단
+const HEX_TOKEN_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+  'function balanceOf(address account) external view returns (uint256)',
+  'function transfer(address to, uint256 amount) external returns (bool)',
+  'function decimals() external view returns (uint8)',
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
+  'event Approval(address indexed owner, address indexed spender, uint256 value)',
+];
+
 // ────────────────────────────────────────────────
-// BUT bank ABI (butBank.sol)
+// BUT bank ABI (butBank.sol) — 전체 ABI
 // ────────────────────────────────────────────────
 const BUT_BANK_ABI = [
-  'function user(address who) external view returns (uint256 totalAllow, uint256 totalBuy, uint256 depo, uint256 stakingTime, uint256 lastClaim)',
-  'function totalStaked() external view returns (uint256)',
-  'function totalfee() external view returns (uint256)',
+  // 조회 — 글로벌
   'function price() external view returns (uint256)',
+  'function totalStaked() external view returns (uint256)',
   'function hexBalance() external view returns (uint256)',
-  'function tokenInventory() external view returns (uint256)',
   'function effectiveStaked() external view returns (uint256)',
+  'function tokenInventory() external view returns (uint256)',
   'function circulatingSupply() external view returns (uint256)',
+  'function totalfee() external view returns (uint256)',
+  'function rate() external view returns (uint8)',
+  'function act() external view returns (uint8)',
+  'function autoStakeBps() external view returns (uint16)',
+
+  // 조회 — 사용자별
+  'function user(address who) external view returns (uint256 totalAllow, uint256 totalBuy, uint256 depo, uint256 stakingTime, uint256 lastClaim)',
+  'function pendingDividend(address who) external view returns (uint256)',
+  'function myDashboard(address who) external view returns (uint256 myActualQty, uint256 currentPriceWei, uint256 myMarketCapWei, uint256 myAvgBuyPriceWei, int256 myPnlWei, int256 myRoiBps_)',
+
+  // 쓰기 — 사용자 액션
+  'function buy(uint256 amount, uint256 maxPay) external returns (bool)',
+  'function sell(uint256 amount) external returns (bool)',
+  'function stake(uint256 amount) external returns (bool)',
+  'function withdraw() external returns (bool)',
+  'function claimDividend() external returns (bool)',
 ];
 
 // ────────────────────────────────────────────────
@@ -143,6 +170,10 @@ function getButTokenContract(signerOrProvider) {
 
 function getButBankContract(signerOrProvider) {
   return new ethers.Contract(ADDRESSES.butBank, BUT_BANK_ABI, signerOrProvider);
+}
+
+function getHexTokenContract(signerOrProvider) {
+  return new ethers.Contract(ADDRESSES.hexToken, HEX_TOKEN_ABI, signerOrProvider);
 }
 
 // 하위 호환: 기존 코드에서 getHexContract() 호출 시 butToken 반환
@@ -190,6 +221,8 @@ module.exports = {
   getProvider,
   getPlatformContract,
   getButTokenContract,
+  getHexTokenContract,
+  getButBankContract,
   getHexContract,        // 하위 호환 alias
   walletFromKey,
   getAdminWallet,

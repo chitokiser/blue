@@ -34,42 +34,10 @@
       </div>
     </section>
 
-    <!-- 객실 사진관(썸네일 여러 장 + 넘김) -->
-    <section class="section" id="homestay-rooms">
-      <div class="section-h">
-        <h2 class="section-title">객실 사진관</h2>
-      </div>
-
-      <div class="panel room-panel">
-        <div class="room-view">
-          <button class="room-nav room-nav--prev" type="button" id="roomPrev" aria-label="이전 사진">‹</button>
-
-          <div class="room-stage">
-            <img id="roomSlideImg" loading="lazy" class="room-img" alt="객실 사진" />
-            <div class="room-meta">
-              <span id="roomSlideIndex" class="room-index">-</span>
-            </div>
-          </div>
-
-          <button class="room-nav room-nav--next" type="button" id="roomNext" aria-label="다음 사진">›</button>
-        </div>
-
-        <!-- 썸네일 스트립 -->
-        <div class="room-thumbs-wrap" aria-label="객실 썸네일">
-          <button class="thumb-nav" type="button" id="thumbPrev" aria-label="이전 썸네일">‹</button>
-
-          <div class="room-thumbs" id="roomThumbs" tabindex="0" aria-label="객실 썸네일 목록"></div>
-
-          <button class="thumb-nav" type="button" id="thumbNext" aria-label="다음 썸네일">›</button>
-        </div>
-
-        <div class="help small" id="roomSlideHelp" style="margin-top:10px;"></div>
-      </div>
-    </section>
 
     <section class="section">
       <div class="section-h">
-        <h2 class="section-title">공개 홈스테이</h2>
+        <h2 class="section-title">예약가능 숙박상품</h2>
         <div class="section-tools">
           <input id="qSearch" class="input" placeholder="집이름/그린1·2·3/회원 검색" />
 
@@ -111,7 +79,7 @@
       </div>
       <div id="itemsState" class="state">로딩중...</div>
       <div id="itemsGrid" class="grid"></div>
-      <div class="help small">홈스테이는 category=hotel(또는 homestay)로 등록된 놀거리만 표시됩니다.</div>
+      
     </section>
   </main>
 

@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>JUMP DAO 의결 - Jump</title>
+  <title>BlueEco DAO 의결 - Jump</title>
 
   <link rel="stylesheet" href="/assets/css/app.css" />
   <link rel="stylesheet" href="/assets/css/header.css" />
@@ -20,8 +20,8 @@
     <!-- 목록 뷰 -->
     <div id="daoListView">
       <div class="dao-header">
-        <h1>JUMP DAO 의결</h1>
-        <p>JUMP 토큰 스테이킹 보유자가 참여하는 분산 자율 조직(DAO) 의결 시스템입니다.</p>
+        <h1>BlueEco DAO 의결</h1>
+        <p>But 토큰 스테이킹 보유자가 참여하는 분산 자율 조직(DAO) 의결 시스템입니다.</p>
       </div>
 
       <!-- 탭 -->
@@ -64,13 +64,13 @@
 
       <!-- 지지 현황 (review 상태) -->
       <div class="dao-progress-wrap" id="supportProgress" style="display:none;">
-        <div class="dao-progress-title">📋 안건 지지 현황 (목표: 250,000 JUMP)</div>
+        <div class="dao-progress-title">📋 안건 지지 현황 (목표: 250,000 BUT)</div>
         <div class="dao-support-bar-wrap">
           <div class="dao-support-bar" id="supportBar" style="width:0%"></div>
         </div>
         <div class="dao-progress-labels">
-          <span id="supportYes" class="dao-progress-yes">0 JUMP</span>
-          <span id="supportTarget">목표 250,000 JUMP</span>
+          <span id="supportYes" class="dao-progress-yes">0 But</span>
+          <span id="supportTarget">목표 250,000 BUT</span>
         </div>
       </div>
 
@@ -81,8 +81,8 @@
           <div class="dao-progress-bar" id="voteBar" style="width:0%"></div>
         </div>
         <div class="dao-progress-labels">
-          <span id="voteYesLabel" class="dao-progress-yes">찬성 0표 (0 JUMP)</span>
-          <span id="voteNoLabel"  class="dao-progress-no">반대 0표 (0 JUMP)</span>
+          <span id="voteYesLabel" class="dao-progress-yes">찬성 0표 (0 BUT)</span>
+          <span id="voteNoLabel"  class="dao-progress-no">반대 0표 (0 BUT)</span>
         </div>
         <div style="margin-top:8px;font-size:0.8rem;color:var(--muted);" id="voteQuorum"></div>
       </div>
@@ -108,7 +108,7 @@
         <div class="dao-comments-title">💬 댓글 <span id="commentCount" style="color:var(--muted);font-weight:400;"></span></div>
         <div id="commentFormWrap">
           <div class="dao-comment-form">
-            <textarea class="dao-comment-input" id="commentInput" placeholder="댓글을 입력하세요 (JUMP 10,000개 이상 스테이킹 필요)" maxlength="500" rows="2"></textarea>
+            <textarea class="dao-comment-input" id="commentInput" placeholder="댓글을 입력하세요 (BUT 10,000개 이상 스테이킹 필요)" maxlength="500" rows="2"></textarea>
             <button class="btn btn--primary btn--sm" id="btnComment" style="align-self:flex-end;">등록</button>
           </div>
           <div id="commentMsg" style="font-size:0.8rem;color:var(--muted);margin-top:4px;"></div>
@@ -146,7 +146,7 @@
   <div class="dao-modal-overlay" id="createModal">
     <div class="dao-modal">
       <div class="dao-modal-title">✍️ 안건 심의 등록</div>
-      <p style="font-size:0.82rem;color:var(--muted);margin:0 0 16px;">JUMP 10,000개 이상 스테이킹 + 관리자 승인 후 심의가 시작됩니다.</p>
+      <p style="font-size:0.82rem;color:var(--muted);margin:0 0 16px;">But 10,000개 이상 스테이킹 + 관리자 승인 후 심의가 시작됩니다.</p>
       <div class="dao-field">
         <label>제목 <em style="color:var(--danger)">*</em></label>
         <input type="text" id="proposalTitle" maxlength="100" placeholder="안건 제목을 입력하세요" />

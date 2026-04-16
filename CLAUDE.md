@@ -229,14 +229,4 @@ type: 짧은 요약 (한/영 혼용 가능)
 - 본문: 변경 이유 + 변경 내용 bullet
 ```
 
----
 
-## 9. 프로젝트 구조 메모
-
-- `buggy.html` — 사용자 앱 (Uber 스타일 전체화면)
-- `buggy-driver.html` — 기사 앱 (PWA, jump_cart.png 아이콘)
-- `buggy-admin.html` — 관리자 대시보드
-- `functions/handlers/buggy.js` — Cloud Functions v2 (수수료, 결제, 라이드 처리)
-- Geocoding: **Nominatim** (Google Geocoding API 사용 안 함 — 비활성화 상태)
-- HEX 결제: BSC 체인, 수탁 지갑, VND→USD→HEX wei 변환
-- 수수료율: Firestore `buggy_config/default.driverSharePct` (기본 80%, 관리자 설정 가능)
