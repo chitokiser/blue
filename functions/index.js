@@ -784,6 +784,28 @@ exports.buyCoopProduct = onCall(
   })
 );
 
+exports.joinCoopMall = onCall(
+  { secrets: [walletSecret, adminKeySecret] },
+  wrapError(async (request) => {
+    const uid = requireAuth(request);
+    process.env.ADMIN_PRIVATE_KEY = adminKeySecret.value();
+    const result = await coopH.joinCoopMall(uid, walletSecret.value());
+    logger.info('joinCoopMall', { uid, txHash: result.txHash });
+    return result;
+  })
+);
+
+exports.convertCoopPoints = onCall(
+  { secrets: [walletSecret, adminKeySecret] },
+  wrapError(async (request) => {
+    const uid = requireAuth(request);
+    process.env.ADMIN_PRIVATE_KEY = adminKeySecret.value();
+    const result = await coopH.convertCoopPoints(uid, walletSecret.value());
+    logger.info('convertCoopPoints', { uid, txHash: result.txHash });
+    return result;
+  })
+);
+
 exports.adminSetCoopConfig = onCall(
   {},
   wrapError(async (request) => {

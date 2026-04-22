@@ -90,7 +90,7 @@ async function buyEventVoucher(uid, { eventId }, masterSecret) {
   const required = event.stakeRequired || 0;
   if (staked < required) {
     throw new Error(
-      `스테이킹 조건 미충족. 필요: JUMP ${required.toLocaleString()}개, 보유: ${staked.toLocaleString()}개`
+      `스테이킹 조건 미충족. 필요: BUT ${required.toLocaleString()}개, 보유: ${staked.toLocaleString()}개`
     );
   }
 

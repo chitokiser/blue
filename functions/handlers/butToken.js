@@ -16,7 +16,7 @@ const {
   estimateGasWithBuffer,
 } = require('../wallet/chain');
 
-const db = admin.firestore();
+function db() { return admin.firestore(); }
 
 // act 비트마스크 상수 (butBank.sol 기준)
 const ACT_BUY   = 1;
@@ -29,7 +29,7 @@ const ACT_DIV   = 16;
 // 헬퍼: 수탁 지갑 signer 준비 (linkedFrom 지원)
 // ─────────────────────────────────────────────
 async function getCustodialSigner(uid, masterSecret) {
-  const snap = await db.collection('users').doc(uid).get();
+  const snap = await db().collection('users').doc(uid).get();
   const data = snap.data();
   if (!data) throw new Error('사용자를 찾을 수 없습니다.');
 
@@ -37,7 +37,7 @@ async function getCustodialSigner(uid, masterSecret) {
 
   // 연결된 지갑인 경우 소스 UID에서 키 로드
   if (walletData?.linkedFrom) {
-    const sourceSnap = await db.collection('users').doc(walletData.linkedFrom).get();
+    const sourceSnap = await db().collection('users').doc(walletData.linkedFrom).get();
     const sourceData = sourceSnap.data();
     if (!sourceData?.wallet?.encryptedKey) {
       throw new Error('연결된 지갑의 키를 찾을 수 없습니다.');
@@ -65,7 +65,7 @@ async function getButStatus(uid) {
   const hexToken  = getHexTokenContract(provider);
 
   // 사용자 지갑 주소 조회
-  const snap = await db.collection('users').doc(uid).get();
+  const snap = await db().collection('users').doc(uid).get();
   const walletData = snap.data()?.wallet;
   const userAddress = walletData?.address ?? null;
 

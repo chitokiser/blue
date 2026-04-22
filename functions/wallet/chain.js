@@ -17,6 +17,7 @@ const ADDRESSES = {
   butTreasury: '0x47fac604B1E699E7fbE470598EF69024e8a43b7f',  // Treasury
   butPlatform: '0x93ded35508F56BA53C5653Eca736aDdfD994AFcd',  // 메인 플랫폼 컨트랙트
   jumpPlatform: '0x93ded35508F56BA53C5653Eca736aDdfD994AFcd',  // 레거시 alias
+  coopMall:    '0x98C8CaA6020F24Cbf45a457a483aFAb59c317f1a',  // ButDaoCoopMall (CoopMall v3)
 };
 
 // ────────────────────────────────────────────────
@@ -153,6 +154,45 @@ const BUT_BANK_ABI = [
 ];
 
 // ────────────────────────────────────────────────
+// CoopMall ABI (ButDaoCoopMall.sol)
+// ────────────────────────────────────────────────
+const COOP_MALL_ABI = [
+  // 조회
+  'function users(address) external view returns (bool eligible, bool member, address mentor, uint256 points)',
+  'function membershipFeeHex() external view returns (uint256)',
+  'function voucherTemplateCount() external view returns (uint256)',
+  'function voucherCount() external view returns (uint256)',
+  'function voucherTemplates(uint256) external view returns (uint256 hexPrice, uint16 burnFeeBps, bool active, string description, string usagePlace, string imageURI)',
+  'function vouchers(uint256) external view returns (uint256 templateId, address owner, bool burned)',
+  'function owner() external view returns (address)',
+
+  // 회원 액션
+  'function joinMall() external',
+
+  // 바우처 액션
+  'function buyVoucher(uint256 templateId) external',
+  'function transferVoucher(uint256 voucherId, address to) external',
+  'function burnVoucher(uint256 voucherId) external',
+
+  // 관리자 액션
+  'function grantEligibility(address user, address mentor) external',
+  'function createVoucherTemplate(uint256 hexPrice, uint16 burnFeeBps, string calldata description, string calldata usagePlace, string calldata imageURI) external returns (uint256)',
+  'function updateVoucherTemplate(uint256 templateId, uint256 hexPrice, uint16 burnFeeBps, bool active, string calldata description, string calldata usagePlace, string calldata imageURI) external',
+  'function setMembershipFee(uint256 newFeeWei) external',
+  'function setMentorRewardBps(uint16 bps) external',
+  'function withdrawHex(address to, uint256 amount) external',
+  'function withdrawbut(address to, uint256 amount) external',
+
+  // 이벤트
+  'event EligibilityGranted(address indexed user, address indexed mentor)',
+  'event MemberJoined(address indexed user, uint256 feeHex, uint256 butGiven)',
+  'event VoucherTemplateCreated(uint256 indexed templateId, uint256 hexPrice, uint16 burnFeeBps)',
+  'event VoucherBought(uint256 indexed voucherId, uint256 indexed templateId, address indexed buyer)',
+  'event VoucherTransferred(uint256 indexed voucherId, address indexed from, address indexed to)',
+  'event VoucherBurned(uint256 indexed voucherId, address indexed owner, uint256 hexReturned, uint256 feeKept)',
+];
+
+// ────────────────────────────────────────────────
 // 팩토리 함수
 // ────────────────────────────────────────────────
 
@@ -191,6 +231,10 @@ function getJumpTokenContract(signerOrProvider) {
   return getButTokenContract(signerOrProvider);
 }
 
+function getCoopMallContract(signerOrProvider) {
+  return new ethers.Contract(ADDRESSES.coopMall, COOP_MALL_ABI, signerOrProvider);
+}
+
 /**
  * 복호화된 private key로 Wallet 복원
  */
@@ -223,6 +267,7 @@ module.exports = {
   getButTokenContract,
   getHexTokenContract,
   getButBankContract,
+  getCoopMallContract,
   getHexContract,        // 하위 호환 alias
   walletFromKey,
   getAdminWallet,

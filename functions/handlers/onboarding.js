@@ -9,7 +9,7 @@ const { encrypt, decrypt } = require('../wallet/crypto');
 const {
   getProvider,
   getPlatformContract,
-  getHexContract,
+  getHexTokenContract,
   getAdminWallet,
   walletFromKey,
   estimateGasWithBuffer,
@@ -263,16 +263,18 @@ async function getUserOnChainData(uid) {
 
   const provider    = getProvider();
   const platform    = getPlatformContract(provider);
-  const hexContract = getHexContract(provider);
+  const hexContract = getHexTokenContract(provider);
   const { fetchExchangeRates } = require('../wallet/exchange');
 
-  // 온체인 조회 + 환율 조회 + 지갑 HEX 잔액 병렬 실행
+  // 온체인 조회 + 환율 조회 + 지갑 HEX 잔액 + 플랫폼 내 충전 HEX 잔액 병렬 실행
   // members() 반환: (uint32 level, address mentor, uint256 exp, uint256 points, bool blocked)
-  const [[level, mentor, exp, points, blocked], ratesResult, walletHexBal] =
+  // getUserValueScaled() 반환: (hexBalWei, krwValueScaled, usdValueScaled, vndValueScaled, scale)
+  const [[level, mentor, exp, points, blocked], ratesResult, walletHexBal, userValue] =
     await Promise.all([
       platform.members(address),
       fetchExchangeRates().catch(() => null),
       hexContract.balanceOf(address),
+      platform.getUserValueScaled(address).catch(() => null),
     ]);
 
   const krwPerUsd = ratesResult?.krwPerUsd ?? null;
@@ -315,6 +317,12 @@ async function getUserOnChainData(uid) {
     walletHexKrw:     hexToKrw(walletHexBal),
     walletHexUsd:     hexToUsd(walletHexBal),
     walletHexVnd:     hexToVnd(walletHexBal),
+    // 플랫폼 컨트랙트 내 충전 HEX 잔액 (adminCreditHex로 입금된 금액)
+    platformHexWei:     userValue ? userValue[0].toString() : '0',
+    platformHexDisplay: userValue ? parseFloat(ethers.formatEther(userValue[0])).toFixed(4) : '0',
+    platformHexKrw:     userValue ? hexToKrw(userValue[0]) : null,
+    platformHexUsd:     userValue ? hexToUsd(userValue[0]) : null,
+    platformHexVnd:     userValue ? hexToVnd(userValue[0]) : null,
     krwPerUsd,
     vndPerUsd,
   };

@@ -7,10 +7,14 @@ const admin = require('firebase-admin');
 const { ethers } = require('ethers');
 const { decrypt } = require('../wallet/crypto');
 const {
+  ADDRESSES,
   getProvider,
   getHexContract,
+  getHexTokenContract,
   getButBankContract,
   getJumpBankContract,
+  getPlatformContract,
+  getCoopMallContract,
   walletFromKey,
   getAdminWallet,
   estimateGasWithBuffer,
@@ -45,26 +49,36 @@ function krwToHexWei(krwAmount, krwPerUsd) {
 }
 
 // ─────────────────────────────────────────────
-// 내부 헬퍼: 접근 권한 확인
+// 내부 헬퍼: 접근 권한 확인 (CoopMall 온체인 멤버십)
 // ─────────────────────────────────────────────
 async function getCoopAccess(uid) {
-  const configSnap = await db.collection('coopConfig').doc('main').get();
-  const minStake   = configSnap.exists ? (configSnap.data()?.minStake ?? 10000) : 10000;
-
   const userSnap = await db.collection('users').doc(uid).get();
   const address  = userSnap.data()?.wallet?.address || null;
 
-  let userStaked = 0;
+  let isMember         = false;
+  let membershipFeeWei = '10000000000000000000'; // 10 HEX (기본값)
+  let userPoints       = '0';
+
   if (address) {
     try {
-      const butBank = getButBankContract(getProvider());
-      const userInfo = await butBank.user(address);
-      userStaked     = Number(userInfo.depo);
+      const provider  = getProvider();
+      const coopMall  = getCoopMallContract(provider);
+      const [userInfo, feeWei] = await Promise.all([
+        coopMall.users(address),
+        coopMall.membershipFeeHex(),
+      ]);
+      isMember         = userInfo.member;
+      membershipFeeWei = feeWei.toString();
+      userPoints       = userInfo.points.toString();
     } catch (_) {}
   }
 
-  return { minStake, userStaked, hasAccess: userStaked >= minStake };
+  // 수탁 지갑이 있으면 누구든 가입 가능 (자격 부여 자동화)
+  const canJoin = !!address;
+
+  return { isMember, canJoin, membershipFeeWei, hasAccess: isMember, address, userPoints };
 }
+
 
 // ─────────────────────────────────────────────
 // 1. 상품 목록 조회 (접근 여부 포함)
@@ -82,9 +96,11 @@ async function listCoopProducts(uid) {
 
   return {
     products,
-    minStake:   access.minStake,
-    userStaked: access.userStaked,
-    hasAccess:  access.hasAccess,
+    hasAccess:        access.hasAccess,
+    isMember:         access.isMember,
+    canJoin:          access.canJoin,
+    membershipFeeWei: access.membershipFeeWei,
+    userPoints:       access.userPoints,
   };
 }
 
@@ -94,10 +110,7 @@ async function listCoopProducts(uid) {
 async function buyCoopProduct(uid, { productId }, masterSecret) {
   const access = await getCoopAccess(uid);
   if (!access.hasAccess) {
-    throw new Error(
-      `스테이킹 부족. 최소 ${access.minStake.toLocaleString()}개 필요, ` +
-      `현재 ${access.userStaked.toLocaleString()}개`
-    );
+    throw new Error('CoopMall 회원이 아닙니다. 10 HEX 회비를 납부하고 가입하세요.');
   }
 
   const productSnap = await db.collection('coopProducts').doc(productId).get();
@@ -231,9 +244,136 @@ async function adminDeleteCoopProduct(uid, { id }) {
   return { id };
 }
 
+// ─────────────────────────────────────────────
+// 6. CoopMall 가입 (누구나 직접 10 HEX 납부)
+//    - 관리자 승인 없이 자동 처리
+//    - 멘토는 butPlatform.members(addr).mentor 에서 자동 조회
+// ─────────────────────────────────────────────
+async function joinCoopMall(uid, masterSecret) {
+  const userSnap = await db.collection('users').doc(uid).get();
+  const walletData = userSnap.data()?.wallet;
+  if (!walletData?.encryptedKey) throw new Error('수탁 지갑이 없습니다');
+
+  const userAddr  = walletData.address;
+  const provider  = getProvider();
+  const coopMall  = getCoopMallContract(provider);
+  const mallInfo  = await coopMall.users(userAddr);
+
+  if (mallInfo.member) throw new Error('이미 CoopMall 회원입니다');
+
+  // butPlatform 에서 멘토 주소 조회
+  let mentorAddr = ethers.ZeroAddress;
+  try {
+    const platform   = getPlatformContract(provider);
+    const memberInfo = await platform.members(userAddr);
+    const candidate  = memberInfo.mentor;
+    // 자기 자신이 멘토인 경우(불가) → address(0) 사용
+    if (candidate && candidate.toLowerCase() !== userAddr.toLowerCase()) {
+      mentorAddr = candidate;
+    }
+  } catch (_) {}
+
+  const feeWei   = await coopMall.membershipFeeHex();
+  const hexToken = getHexTokenContract(provider);
+  const hexBal   = await hexToken.balanceOf(userAddr);
+  if (hexBal < feeWei) {
+    const have = parseFloat(ethers.formatEther(hexBal)).toFixed(4);
+    const need = parseFloat(ethers.formatEther(feeWei)).toFixed(4);
+    throw new Error(`HEX 잔액 부족. 필요: ${need} HEX, 보유: ${have} HEX`);
+  }
+
+  // 관리자 지갑으로 grantEligibility 자동 실행 (아직 eligible 아닌 경우)
+  const adminWallet = getAdminWallet();
+  if (!mallInfo.eligible) {
+    const mallAdmin  = getCoopMallContract(adminWallet);
+    const grantGas   = await estimateGasWithBuffer(mallAdmin, 'grantEligibility', [userAddr, mentorAddr]);
+    const grantTx    = await mallAdmin.grantEligibility(userAddr, mentorAddr, { gasLimit: grantGas });
+    await grantTx.wait();
+  }
+
+  // BNB 가스비 보충 (유저 수탁 지갑)
+  const bnbBal = await provider.getBalance(userAddr);
+  if (bnbBal < ethers.parseEther('0.0001')) {
+    const fundTx = await adminWallet.sendTransaction({
+      to: userAddr, value: ethers.parseEther('0.0002'),
+    });
+    await fundTx.wait();
+  }
+
+  const privateKey  = decrypt(walletData.encryptedKey, masterSecret);
+  const signer      = walletFromKey(privateKey, provider);
+  const hexSigned   = getHexTokenContract(signer);
+  const mallAddress = ADDRESSES.coopMall;
+
+  // HEX approve
+  const approvGas = await estimateGasWithBuffer(hexSigned, 'approve', [mallAddress, feeWei]);
+  const approvTx  = await hexSigned.approve(mallAddress, feeWei, { gasLimit: approvGas });
+  await approvTx.wait();
+
+  // joinMall
+  const mallSigned = getCoopMallContract(signer);
+  const joinGas    = await estimateGasWithBuffer(mallSigned, 'joinMall', []);
+  const joinTx     = await mallSigned.joinMall({ gasLimit: joinGas });
+  const receipt    = await joinTx.wait();
+
+  return {
+    txHash:    receipt.hash,
+    feeHex:    parseFloat(ethers.formatEther(feeWei)).toFixed(4),
+    mentor:    mentorAddr,
+  };
+}
+
+// ─────────────────────────────────────────────
+// 7. 포인트 → HEX 전환
+//    - CoopMall.convertPoints(pts) 호출
+//    - 전환 가능한 포인트 전액을 HEX로 출금
+// ─────────────────────────────────────────────
+async function convertCoopPoints(uid, masterSecret) {
+  const access = await getCoopAccess(uid);
+  if (!access.hasAccess) throw new Error('CoopMall 회원이 아닙니다');
+
+  const pts = BigInt(access.userPoints);
+  if (pts === 0n) throw new Error('전환 가능한 포인트가 없습니다');
+
+  const userSnap   = await db.collection('users').doc(uid).get();
+  const walletData = userSnap.data()?.wallet;
+  if (!walletData?.encryptedKey) throw new Error('수탁 지갑이 없습니다');
+
+  const provider = getProvider();
+
+  // HEX 준비금 확인
+  const coopMallRead = getCoopMallContract(provider);
+  const hexBal       = await getHexTokenContract(provider).balanceOf(ADDRESSES.coopMall);
+  if (hexBal < pts) throw new Error('컨트랙트 HEX 준비금 부족으로 전환 불가합니다');
+
+  // BNB 가스비 보충
+  const adminWallet = getAdminWallet();
+  const bnbBal = await provider.getBalance(walletData.address);
+  if (bnbBal < ethers.parseEther('0.00005')) {
+    const fundTx = await adminWallet.sendTransaction({
+      to: walletData.address, value: ethers.parseEther('0.0001'),
+    });
+    await fundTx.wait();
+  }
+
+  const privateKey   = decrypt(walletData.encryptedKey, masterSecret);
+  const signer       = walletFromKey(privateKey, provider);
+  const mallSigned   = getCoopMallContract(signer);
+  const gasLimit     = await estimateGasWithBuffer(mallSigned, 'convertPoints', [pts]);
+  const tx           = await mallSigned.convertPoints(pts, { gasLimit });
+  const receipt      = await tx.wait();
+
+  return {
+    txHash:    receipt.hash,
+    ptsHex:    parseFloat(ethers.formatEther(pts)).toFixed(4),
+  };
+}
+
 module.exports = {
   listCoopProducts,
   buyCoopProduct,
+  joinCoopMall,
+  convertCoopPoints,
   adminSetCoopConfig,
   adminSaveCoopProduct,
   adminDeleteCoopProduct,

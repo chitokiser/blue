@@ -15,7 +15,7 @@ const {
   getAdminWallet,
   getProvider,
   getPlatformContract,
-  getHexContract,
+  getHexTokenContract,
   walletFromKey,
   estimateGasWithBuffer,
 } = require('../wallet/chain');
@@ -222,7 +222,7 @@ async function approveDeposit(adminUid, refCode, overrideKrwRate = null, masterS
   try {
     // ── Step 1: HEX approve (필요 시 자동) → ownerDepositHex ──
     try {
-      const hexContract = getHexContract(adminWallet);
+      const hexContract = getHexTokenContract(adminWallet);
 
       // allowance 부족 시 MaxUint256 approve (관리자 지갑 → jumpPlatform)
       const allowance = await hexContract.allowance(adminWallet.address, ADDRESSES.butPlatform);
